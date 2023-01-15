@@ -1,0 +1,30 @@
+name: test
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+
+defaults:
+  run:
+    shell: bash
+
+
+jobs:
+  test:
+    permissions:
+      contents: read
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+    - uses: Swatinem/rust-cache@v1
+    - run: cargo install just
+    - run: just test
