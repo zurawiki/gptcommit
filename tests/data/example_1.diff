@@ -1,0 +1,72 @@
+diff --git a/.vscode/launch.json b/.vscode/launch.json
+new file mode 100644
+index 0000000..f26eafc
+--- /dev/null
++++ b/.vscode/launch.json
+@@ -0,0 +1,10 @@
++{
++    // Use IntelliSense to learn about possible attributes.
++    // Hover to view descriptions of existing attributes.
++    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
++    "version": "0.2.0",
++    "configurations": [
++      rust
++
++    ]
++}
+diff --git a/foo b/foo
+new file mode 100644
+index 0000000..a51b2a6
+--- /dev/null
++++ b/foo
+@@ -0,0 +1 @@
++sadasdas
+diff --git a/src/main.rs b/src/main.rs
+index 46d98b0..b1dd2af 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -1,10 +1,7 @@
+ use std::process::Command;
+ 
+ fn run_command(cmd: &str, args: &[&str]) -> Result<String, String> {
+-    let output = match Command::new(cmd)
+-        .args(args)
+-        .output()
+-    {
++    let output = match Command::new(cmd).args(args).output() {
+         Ok(o) => o,
+         Err(e) => return Err(format!("Failed to execute process: {}", e)),
+     };
+@@ -19,9 +16,28 @@ fn run_command(cmd: &str, args: &[&str]) -> Result<String, String> {
+ }
+ 
+ fn main() {
+-    let result = run_command("git", &["diff", "--staged"]);
+-    match result {
+-        Ok(output) => println!("{}", output),
+-        Err(error) => eprintln!("{}", error),
++    let output = run_command("git", &["diff", "--staged"]).unwrap();
++    let file_diffs = split_string_with_pattern(&output, "diff --git ");
++    println!("{:?}", file_diffs);
++}
++
++fn split_string_with_pattern<'a>(string: &'a str, pattern: &'a str) -> Vec<&'a str> {
++    let mut start = dbg!(pattern.len());
++    let mut substrings = Vec::new();
++
++    while let Some(i) = string[start..].find(pattern) {
++        substrings.push(&string[start..start + i]);
++        start += i;
+     }
++    substrings.push(&string[start..]);
++
++    substrings
++}
++
++#[test]
++fn test_split_string_with_pattern() {
++    let string = include_str!("../test_data/diff.txt");
++    let pattern = "diff --git ";
++    println!("testing");
++    assert!(split_string_with_pattern(string, pattern).len() == 2);
+ }
