@@ -21,11 +21,6 @@ release:
 install:
     cargo install --path .
 
-# Tools for development
-bootstrap:
-    cargo install cargo-edit
-    cargo install --git https://github.com/kurtbuilds/toml-cli
-
 test *args:
     cargo test
 alias t := test
