@@ -6,7 +6,7 @@ use std::{
 
 #[cfg(unix)]
 use std::{
-    fs::{self, Permissions},
+    fs::{Permissions},
     os::unix::prelude::PermissionsExt,
 };
 
