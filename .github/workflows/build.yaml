@@ -28,6 +28,6 @@ jobs:
       with:
         toolchain: stable
     - uses: Swatinem/rust-cache@v1
-    - run: cargo install just
+    - uses: extractions/setup-just@v1
     - run: just build
 
