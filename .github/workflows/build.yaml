@@ -1,33 +1,34 @@
 name: build
 
 on:
-  push:
-    branches:
-    - main
-  pull_request:
-    branches:
-    - main
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
 
 defaults:
-  run:
-    shell: bash
+    run:
+        shell: bash
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - "ubuntu-22.04"
-          - "macos-10.15"
-          - "windows-2019"
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-    - uses: Swatinem/rust-cache@v1
-    - uses: extractions/setup-just@v1
-    - run: just build
-
+    build:
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                os:
+                    - "ubuntu-22.04"
+                    - "macos-10.15"
+                    - "windows-2019"
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: stable
+            - uses: Swatinem/rust-cache@v1
+            - uses: extractions/setup-just@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - run: just build

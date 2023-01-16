@@ -1,28 +1,30 @@
 name: test
 
 on:
-  push:
-    branches:
-    - main
-  pull_request:
-    branches:
-    - main
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
 
 defaults:
-  run:
-    shell: bash
+    run:
+        shell: bash
 
 jobs:
-  test:
-    permissions:
-      contents: read
-    runs-on: ubuntu-22.04
+    test:
+        permissions:
+            contents: read
+        runs-on: ubuntu-22.04
 
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-    - uses: Swatinem/rust-cache@v1
-    - uses: extractions/setup-just@v1
-    - run: just test
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: stable
+            - uses: Swatinem/rust-cache@v1
+            - uses: extractions/setup-just@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - run: just test
