@@ -1,4 +1,4 @@
-name: test
+name: CI
 
 on:
     push:
@@ -13,18 +13,42 @@ defaults:
         shell: bash
 
 jobs:
-    test:
-        permissions:
-            contents: read
-        runs-on: ubuntu-22.04
-
+    build:
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                os:
+                    - "ubuntu-22.04"
+                    - "macos-10.15"
+                    - "windows-2019"
         steps:
             - uses: actions/checkout@v2
             - uses: actions-rs/toolchain@v1
               with:
                   toolchain: stable
-            - uses: Swatinem/rust-cache@v1
+            - uses: Swatinem/rust-cache@v2
             - uses: extractions/setup-just@v1
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            - run: just test
+            - run: just build
+
+    just:
+        runs-on: ubuntu-22.04
+        strategy:
+            fail-fast: false
+            matrix:
+                just_cmd:
+                    - "test"
+                    - "check"
+                    - "fix"
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: stable
+            - uses: Swatinem/rust-cache@v2
+            - uses: extractions/setup-just@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - run: just ${{ matrix.just_cmd }}
