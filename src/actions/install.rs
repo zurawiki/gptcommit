@@ -1,8 +1,15 @@
 use std::{
-    fs::{self, Permissions},
+    fs::{self},
+    process::Command,
     path::PathBuf,
-    process::Command, os::unix::prelude::PermissionsExt,
 };
+
+#[cfg(unix)]
+use std::{
+    fs::{Permissions},
+    os::unix::prelude::PermissionsExt,
+};
+
 
 use ansi_term::Colour;
 use anyhow::{anyhow, bail, Result};
@@ -42,6 +49,7 @@ pub(crate) async fn main() -> Result<()> {
         &prepare_commit_msg_path,
         include_str!("../../prepare-commit-msg"),
     )?;
+    #[cfg(unix)]
     fs::set_permissions(&prepare_commit_msg_path, Permissions::from_mode(0o755))?;
 
     println!(
