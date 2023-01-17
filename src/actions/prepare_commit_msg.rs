@@ -1,6 +1,7 @@
 use ansi_term::Colour;
 use anyhow::Result;
 use clap::arg;
+use clap::ValueEnum;
 
 use clap::Args;
 
@@ -27,6 +28,21 @@ async fn process_file_diff(file_diff: &str) -> Option<(String, String)> {
         None
     }
 }
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, ValueEnum)]
+enum CommitSource {
+    #[clap(name = "")]
+    Empty,
+    Message,
+    Template,
+    Merge,
+    Squash,
+    Commit,
+}
+impl Default for CommitSource {
+    fn default() -> Self {
+        CommitSource::Empty
+    }
+}
 
 #[derive(Args, Debug)]
 pub(crate) struct PrepareCommitMsgArgs {
@@ -35,8 +51,8 @@ pub(crate) struct PrepareCommitMsgArgs {
     commit_msg_file: PathBuf,
 
     /// Description of the commit message's source
-    #[arg(long)]
-    commit_source: Option<String>,
+    #[arg(long, value_enum)]
+    commit_source: CommitSource,
 
     /// SHA1 hash of the commit being amended
     #[arg(long)]
@@ -48,6 +64,17 @@ pub(crate) struct PrepareCommitMsgArgs {
 }
 
 pub(crate) async fn main(args: PrepareCommitMsgArgs) -> Result<()> {
+    match args.commit_source {
+        CommitSource::Empty => {}
+        CommitSource::Commit => {
+            println!("🤖 Skipping gptcommit because commit is being amended");
+            return Ok(());
+        }
+        _ => {
+            println!("🤖 Skipping gptcommit because githook is not run on commit");
+            return Ok(());
+        }
+    };
     println!(
         "{}",
         Colour::Green
