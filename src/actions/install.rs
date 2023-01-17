@@ -1,15 +1,11 @@
 use std::{
     fs::{self},
-    process::Command,
     path::PathBuf,
+    process::Command,
 };
 
 #[cfg(unix)]
-use std::{
-    fs::{Permissions},
-    os::unix::prelude::PermissionsExt,
-};
-
+use std::{fs::Permissions, os::unix::prelude::PermissionsExt};
 
 use ansi_term::Colour;
 use anyhow::{anyhow, bail, Result};
