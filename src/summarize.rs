@@ -46,10 +46,29 @@ static PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES: &str = r#"You are an expert programme
 You went over every file that was changed in it.
 For some of these files changes where too big and were omitted in the files diff summary.
 Please summarize the pull request.
-Write your response in bullet points, using the imperative tense following the git commit style guide.
+Write your response in bullet points, using the imperative tense following the pull request style guide.
 Starting each bullet point with a `-`.
 Write a high level description. Do not repeat the commit summaries or the file summaries.
 Write the most important bullet points. The list should not be more than a few bullet points.
+"#;
+
+static PROMPT_TO_SUMMARIZE_DIFF_TITLE: &str = r#"You are an expert programmer, and you are trying to summarize a pull request.
+You went over every file that was changed in it.
+For some of these files changes where too big and were omitted in the files diff summary.
+Please summarize the pull request into a single specific theme.
+Write your response using the imperative tense following the kernel git commit style guide.
+Write a high level title.
+Do not repeat the commit summaries or the file summaries.
+Do not list individual changes in the title.
+
+EXAMPLE SUMMARY COMMENTS:
+```
+Raise the amount of returned recordings
+Switch to internal API for completions
+Lower numeric tolerance for test files
+Schedule all GitHub actions on all OSs
+```
+
 "#;
 
 const MAX_SUMMARY_LENGTH: usize = 3000;
@@ -96,9 +115,29 @@ THE FILE SUMMARIES:
 ```
 
 Remember to write only the most important points and do not write more than a few bullet points.
-THE PULL REQUEST SUMMARY:
+THE pull request SUMMARY:
 "#,
         PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES, summary_points
+    );
+
+    let completion = openai::completions(&prompt).await;
+
+    completion
+}
+
+pub(crate) async fn commit_title(summary_points: &str) -> Result<String> {
+    let prompt = format!(
+        r#"{}
+
+THE FILE SUMMARIES:
+```
+{}
+```
+
+Remember to write only one line, no more than 72 characters.
+THE PULL REQUEST TITLE:
+"#,
+        PROMPT_TO_SUMMARIZE_DIFF_TITLE, summary_points
     );
 
     let completion = openai::completions(&prompt).await;

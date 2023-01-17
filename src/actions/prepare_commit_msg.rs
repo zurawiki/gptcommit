@@ -110,16 +110,17 @@ pub(crate) async fn main(args: PrepareCommitMsgArgs) -> Result<()> {
         .collect::<Vec<String>>()
         .join("\n");
 
+    // TODO parallelize
+    let title = summarize::commit_title(summary_points).await?;
     let completion = summarize::commit_summary(summary_points).await?;
 
     // overwrite commit message file
     let mut commit_msg_path = File::create(args.commit_msg_file)?;
 
-    writeln!(commit_msg_path, "# AI Generated Commit Summary:")?;
-    writeln!(commit_msg_path, "# EDIT BELOW AS NEEDED")?;
+    writeln!(commit_msg_path, "{}", title)?;
+    writeln!(commit_msg_path)?;
     writeln!(commit_msg_path, "{}", completion)?;
-    writeln!(commit_msg_path, "#")?;
-    writeln!(commit_msg_path, "# File-level changes:")?;
+    writeln!(commit_msg_path)?;
     for (file_name, completion) in &summary_for_file {
         if !completion.is_empty() {
             writeln!(commit_msg_path, "[{}]", file_name)?;
