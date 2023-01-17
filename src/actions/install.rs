@@ -7,8 +7,8 @@ use std::{
 #[cfg(unix)]
 use std::{fs::Permissions, os::unix::prelude::PermissionsExt};
 
-use ansi_term::Colour;
 use anyhow::{anyhow, bail, Result};
+use colored::Colorize;
 use which::which;
 
 fn find_executable(name: &str, error_msg: &str) -> Result<PathBuf> {
@@ -25,10 +25,7 @@ fn find_executable(name: &str, error_msg: &str) -> Result<PathBuf> {
 }
 
 pub(crate) async fn main() -> Result<()> {
-    println!(
-        "{}",
-        Colour::Green.bold().paint("Installing gptcommit hook...")
-    );
+    println!("{}", "Installing gptcommit hook...".green().bold());
 
     find_executable("git", "To use gptcommit, you must have git on your PATH")?;
     find_executable("gptcommit", " To use gptcommit, you must have gptcommit on your PATH. Install with `cargo install gptcommit`")?;
@@ -50,12 +47,10 @@ pub(crate) async fn main() -> Result<()> {
 
     println!(
         "{}\n{}",
-        Colour::Green
+        "gptcommit hook successfully installed!".green().bold(),
+        "Make sure to set OPENAI_API_KEY when using `git commit`."
+            .yellow()
             .bold()
-            .paint("gptcommit hook successfully installed!"),
-        Colour::Yellow
-            .bold()
-            .paint("Make sure to set OPENAI_API_KEY when using `git commit`.")
     );
 
     Ok(())

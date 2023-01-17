@@ -1,7 +1,7 @@
-use ansi_term::Colour;
 use anyhow::Result;
 use clap::arg;
 use clap::ValueEnum;
+use colored::Colorize;
 
 use clap::Args;
 
@@ -75,12 +75,7 @@ pub(crate) async fn main(args: PrepareCommitMsgArgs) -> Result<()> {
             return Ok(());
         }
     };
-    println!(
-        "{}",
-        Colour::Green
-            .bold()
-            .paint("🤖 Asking GPT-3 to summarize diffs...")
-    );
+    println!("{}", "🤖 Asking GPT-3 to summarize diffs...".green().bold());
 
     let output = if let Some(git_diff_output) = args.git_diff_content {
         fs::read_to_string(git_diff_output)?
