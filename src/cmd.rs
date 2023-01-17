@@ -1,5 +1,5 @@
 use anyhow::bail;
-use anyhow::{Result};
+use anyhow::Result;
 use std::process::Command;
 
 pub(crate) fn run_command(cmd: &str, args: &[&str]) -> Result<String> {
