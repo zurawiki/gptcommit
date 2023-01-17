@@ -18,15 +18,11 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os:
-                    - "ubuntu-22.04"
-                    - "macos-10.15"
-                    - "windows-2019"
+                os: [ubuntu-latest, windows-latest, macos-latest]
                 just_cmd:
-                    - "test"
-                    - "check"
-                    - "fix"
+                    - "lint"
                     - "build"
+                    - "test"
         steps:
             - uses: actions/checkout@v2
             - uses: actions-rs/toolchain@v1

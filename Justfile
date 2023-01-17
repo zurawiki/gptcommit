@@ -25,15 +25,14 @@ test *args:
     cargo test
 alias t := test
 
-check:
-    cargo check
-alias c := check
+lint:
+    cargo fmt --all -- --check
+    cargo clippy --all-targets --all-features -- -D warnings
 
 fix:
-    cargo clippy --fix
-
-bench:
-    cargo criterion --features bench
+    cargo fix --allow-dirty --allow-staged
+    cargo clippy --all-targets --all-features --fix --allow-dirty --allow-staged -- -D warnings
+    cargo fmt --all
 
 # Bump version. level=major,minor,patch
 version level:
