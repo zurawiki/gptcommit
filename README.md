@@ -2,7 +2,7 @@
 
 A git prepare-commit-msg hook for authoring commit messages with GPT-3. With this tool, you can easily generate clear, comprehensive and descriptive commit messages letting you focus on writing code.
 
-See [announcement blog post](TODO).
+See [announcement blog post](https://zura.wiki/post/never-write-a-commit-message-again-with-the-help-of-gpt-3/).
 
 ## Demo
 
