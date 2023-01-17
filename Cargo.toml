@@ -15,7 +15,7 @@ path = "src/main.rs"
 [dependencies]
 ansi_term = "0.12.1"
 anyhow = "1.0.68"
-clap = { version = "4.0.32", features = ["derive"] }
+clap = { version = "4.1.1", features = ["derive"] }
 futures = "0.3.25"
 log = "0.4.17"
 rayon = "1.6.1"
@@ -24,3 +24,6 @@ serde_json = "1.0.91"
 simple_logger = "4.0.0"
 tokio = { version = "1.24.1", features = ["full"] }
 which = "4.3.0"
+
+[dev-dependencies]
+cargo-edit = "0.11.7"
