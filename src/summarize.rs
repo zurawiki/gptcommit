@@ -134,7 +134,7 @@ THE FILE SUMMARIES:
 {}
 ```
 
-Remember to write only one line, no more than 72 characters.
+Remember to write only one line, no more than 50 characters.
 THE PULL REQUEST TITLE:
 "#,
         PROMPT_TO_SUMMARIZE_DIFF_TITLE, summary_points
