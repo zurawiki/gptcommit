@@ -6,7 +6,7 @@ See [announcement blog post](TODO).
 
 ## Demo
 
-TODO
+[![asciicast](https://asciinema.org/a/552380.svg)](https://asciinema.org/a/552380)
 
 ## Installation
 1. Install this tool locally with cargo (recommended) or homebrew.
