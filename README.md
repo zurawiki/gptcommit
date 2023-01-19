@@ -4,7 +4,6 @@
 [![Github Stars](https://img.shields.io/github/stars/zurawiki/gptcommit.svg)](https://github.com/zurawiki/gptcommit/stargazers)
 [![Github Build Status](https://img.shields.io/github/actions/workflow/status/zurawiki/gptcommit/test.yaml)](https://github.com/zurawiki/gptcommit/actions)
 
-
 [![crates.io status](https://img.shields.io/crates/v/gptcommit.svg)](https://crates.io/crates/gptcommit)
 [![crates.io downloads](https://img.shields.io/crates/d/gptcommit.svg)](https://crates.io/crates/gptcommit)
 [![Rust dependency status](https://deps.rs/repo/github/zurawiki/gptcommit/status.svg)](https://deps.rs/repo/github/zurawiki/gptcommit)
@@ -18,9 +17,11 @@ See [announcement blog post](https://zura.wiki/post/never-write-a-commit-message
 [![asciicast](https://asciinema.org/a/552380.svg)](https://asciinema.org/a/552380)
 
 ## Installation
+
 1. Install this tool locally with cargo.
+
 ```
-cargo install gptcommit
+cargo install --locked gptcommit
 ```
 
 2. In your `git` repository, run the following command to install `gptcommit` as a git prepare-commit-msg hook. You will need to provide an OpenAI API key to complete the installation.
@@ -30,6 +31,7 @@ gptcommit install
 ```
 
 ## Usage
+
 To use `gptcommit`, simply run `git commit` as you normally would. The hook will automatically generate a commit message for you using GPT-3. If you're not satisfied with the generated message, you can always edit it before committing.
 
 Note: By default, `gptcommit` uses the GPT-3 model. Please ensure you have sufficient credits in your OpenAI account to use it.
