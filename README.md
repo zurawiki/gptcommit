@@ -18,7 +18,7 @@ See [announcement blog post](https://zura.wiki/post/never-write-a-commit-message
 [![asciicast](https://asciinema.org/a/552380.svg)](https://asciinema.org/a/552380)
 
 ## Installation
-1. Install this tool locally with cargo (recommended) or homebrew.
+1. Install this tool locally with cargo.
 ```
 cargo install gptcommit
 ```
