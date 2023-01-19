@@ -17,6 +17,14 @@ use crate::git;
 use crate::summarize;
 use crate::util;
 
+/// Splits the contents of a git diff by file.
+///
+/// The file path is the first string in the returned tuple, and the
+/// file content is the second string in the returned tuple.
+///
+/// The function assumes that the file_diff input is well-formed
+/// according to the Diff format described in the Git documentation:
+/// https://git-scm.com/docs/git-diff
 async fn process_file_diff(file_diff: &str) -> Option<(String, String)> {
     if let Some(file_name) = util::get_file_name_from_diff(file_diff) {
         let completion = summarize::diff_summary(file_name, file_diff).await;

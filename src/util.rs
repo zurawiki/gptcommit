@@ -1,4 +1,5 @@
-// TODO make trait of string
+/// TODO make trait of string
+/// Split string by prefix, including the prefix in the result.
 pub(crate) fn split_prefix_inclusive<'a, 'b>(string: &'a str, prefix: &'b str) -> Vec<&'a str> {
     let matches = string.match_indices(prefix).map(|(idx, _)| idx);
     let mut start = 0;
@@ -14,6 +15,10 @@ pub(crate) fn split_prefix_inclusive<'a, 'b>(string: &'a str, prefix: &'b str) -
     substrings
 }
 
+/// Finds the file name from a diff. The diff is expected to be of the form
+/// "diff --git a/file_name b/file_name".
+///
+/// If the diff is not of the expected form, then None is returned.
 pub(crate) fn get_file_name_from_diff(file_diff: &str) -> Option<&str> {
     let (_, suffix) = file_diff.split_once("diff --git a/")?;
     let (file_name, _) = suffix.split_once(' ')?;

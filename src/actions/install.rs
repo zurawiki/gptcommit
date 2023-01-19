@@ -7,22 +7,10 @@ use std::{
 #[cfg(unix)]
 use std::{fs::Permissions, os::unix::prelude::PermissionsExt};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Result};
 use colored::Colorize;
-use which::which;
 
-fn find_executable(name: &str, error_msg: &str) -> Result<PathBuf> {
-    let path = which(name).map_err(|_| {
-        anyhow!(
-            "Could not find `{}` executable in PATH. {}",
-            name,
-            error_msg
-        )
-    })?;
-    info!("Found {} executable at {:?}", name, path);
-
-    Ok(path)
-}
+use crate::cmd::find_executable;
 
 pub(crate) async fn main() -> Result<()> {
     println!("{}", "Installing gptcommit hook...".green().bold());

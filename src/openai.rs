@@ -2,6 +2,8 @@ use anyhow::{anyhow, Result};
 use reqwest::Client;
 use serde_json::{json, Value};
 
+/// Sends a request to OpenAI's API to get a text completion.
+/// It takes a prompt as input, and returns the completion.
 pub(crate) async fn completions(prompt: &str) -> Result<String> {
     let api_key = get_openai_api_key()?;
     let client = Client::new();
