@@ -19,7 +19,7 @@ pub(crate) async fn completions(prompt: &str) -> Result<String> {
         "presence_penalty": 0
     });
     let request = client
-        .post("https://api.openai.com/v1/completions1")
+        .post("https://api.openai.com/v1/completions")
         .header("Content-Type", "application/json")
         .header("Authorization", format!("Bearer {}", api_key))
         .json(&json_data);
