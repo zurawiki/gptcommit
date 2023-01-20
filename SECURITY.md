@@ -5,7 +5,7 @@
 We use SemVer for versioning. We release patches for security vulnerabilities filed against the most recent release.
 | Version | Support           |
 | ------- | ------------------ |
-| 0.*     | :white_check_mark: Most recent release |
+| < 1.0   | :white_check_mark: Most recent release |
 
 ## Reporting a Vulnerability
 
