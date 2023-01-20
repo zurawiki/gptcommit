@@ -1,3 +1,4 @@
+use anyhow::bail;
 use anyhow::Result;
 use clap::arg;
 use clap::ValueEnum;
@@ -15,6 +16,7 @@ use std::path::PathBuf;
 use tokio::task::JoinSet;
 
 use crate::git;
+use crate::openai;
 use crate::summarize;
 use crate::util;
 
@@ -84,6 +86,22 @@ pub(crate) async fn main(args: PrepareCommitMsgArgs) -> Result<()> {
             return Ok(());
         }
     };
+
+    // TODO unify api key retrieval
+    if let Err(err_msg) = openai::get_openai_api_key() {
+        println!(
+            "{}",
+            r#"OPENAI_API_KEY not found in environment.
+Configure the OpenAI API key with the command:
+
+    export OPENAI_API_KEY='sk-...'
+"#
+            .bold()
+            .yellow(),
+        );
+        bail!(err_msg);
+    };
+
     println!("{}", "🤖 Asking GPT-3 to summarize diffs...".green().bold());
 
     let output = if let Some(git_diff_output) = args.git_diff_content {

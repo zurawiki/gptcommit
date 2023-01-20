@@ -49,6 +49,8 @@ fn get_hooks_path() -> Result<PathBuf> {
     let command_output = Command::new("git")
         .args(["rev-parse", "--show-toplevel", "--git-path", "hooks"])
         .output()?;
+    info!("Repo path from git: {:?}", command_output);
+
     if !command_output.status.success() {
         let stderr = String::from_utf8_lossy(&command_output.stderr);
         bail!("{}", stderr);
@@ -58,6 +60,10 @@ fn get_hooks_path() -> Result<PathBuf> {
     let rel_hooks_path = stdout.lines().last().unwrap().to_string();
     // turn relative path into absolute path
     let hooks_path = std::fs::canonicalize(rel_hooks_path)?;
-    debug!("Found hooks path: {:?}", hooks_path);
+    println!(
+        "Installing git hook to {}",
+        hooks_path.display().to_string().bold()
+    );
+
     Ok(hooks_path)
 }

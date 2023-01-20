@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+
 use reqwest::Client;
 use serde_json::{json, Value};
 
@@ -17,24 +18,30 @@ pub(crate) async fn completions(prompt: &str) -> Result<String> {
         "frequency_penalty": 0,
         "presence_penalty": 0
     });
-    let response = client
-        .post("https://api.openai.com/v1/completions")
+    let request = client
+        .post("https://api.openai.com/v1/completions1")
         .header("Content-Type", "application/json")
         .header("Authorization", format!("Bearer {}", api_key))
-        .json(&json_data)
-        .send()
-        .await?;
+        .json(&json_data);
 
+    debug!("Sending request to OpenAI:\n{:?}", request);
+
+    let response = request.send().await?;
     let response_body = response.text().await?;
-    let json_response: Value = serde_json::from_str(&response_body)?;
+    let json_response: Value = serde_json::from_str(&response_body).map_err(|e| {
+        anyhow!(
+            "Could not decode JSON response: {}\nResponse body: {:?}",
+            e,
+            response_body
+        )
+    })?;
     Ok(json_response["choices"][0]["text"]
         .as_str()
-        .ok_or_else(|| anyhow!("Could not decode JSON respose"))?
+        .ok_or_else(|| anyhow!("Unexpected JSON response:\n{}", json_response))?
         .to_string())
 }
 
-fn get_openai_api_key() -> Result<String> {
+pub(crate) fn get_openai_api_key() -> Result<String> {
     // TODO Ask for API key and save it (or confirm from env, flag)
-
-    Ok(std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY not found in environment"))
+    std::env::var("OPENAI_API_KEY").map_err(|e| anyhow!("Could not find OPENAI_API_KEY: {}", e))
 }
