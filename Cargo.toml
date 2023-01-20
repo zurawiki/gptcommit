@@ -1,6 +1,6 @@
 [package]
 name = "gptcommit"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 authors = ["Roger Zurawicki <roger@zura.wiki>"]
 description = "A git prepare-commit-msg hook for summarizing commits with GPT-3."
