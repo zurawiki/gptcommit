@@ -4,6 +4,7 @@ use clap::ValueEnum;
 use colored::Colorize;
 
 use clap::Args;
+use tokio::try_join;
 
 use std::collections::HashMap;
 
@@ -113,9 +114,10 @@ pub(crate) async fn main(args: PrepareCommitMsgArgs) -> Result<()> {
         .collect::<Vec<String>>()
         .join("\n");
 
-    // TODO parallelize
-    let title = summarize::commit_title(summary_points).await?;
-    let completion = summarize::commit_summary(summary_points).await?;
+    let (title, completion) = try_join!(
+        summarize::commit_title(summary_points),
+        summarize::commit_summary(summary_points)
+    )?;
 
     // overwrite commit message file
     let mut commit_msg_path = File::create(args.commit_msg_file)?;
