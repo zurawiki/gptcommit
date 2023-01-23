@@ -2,7 +2,7 @@
 
 [![Github Contributors](https://img.shields.io/github/contributors/zurawiki/gptcommit.svg)](https://github.com/zurawiki/gptcommit/graphs/contributors)
 [![Github Stars](https://img.shields.io/github/stars/zurawiki/gptcommit.svg)](https://github.com/zurawiki/gptcommit/stargazers)
-[![Github Build Status](https://img.shields.io/github/actions/workflow/status/zurawiki/gptcommit/test.yaml)](https://github.com/zurawiki/gptcommit/actions)
+[![CI](https://github.com/zurawiki/gptcommit/actions/workflows/ci.yml/badge.svg)](https://github.com/zurawiki/gptcommit/actions/workflows/ci.yml)
 
 [![crates.io status](https://img.shields.io/crates/v/gptcommit.svg)](https://crates.io/crates/gptcommit)
 [![crates.io downloads](https://img.shields.io/crates/d/gptcommit.svg)](https://crates.io/crates/gptcommit)
