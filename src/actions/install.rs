@@ -58,6 +58,11 @@ fn get_hooks_path() -> Result<PathBuf> {
 
     let stdout = String::from_utf8(command_output.stdout).expect("Invalid UTF-8");
     let rel_hooks_path = stdout.lines().last().unwrap().to_string();
+    info!("Creating dir at {}", rel_hooks_path);
+    // create dirs first otherwise canonicalize will fail
+    fs::create_dir_all(&rel_hooks_path)?;
+    #[cfg(unix)]
+    fs::set_permissions(&rel_hooks_path, Permissions::from_mode(0o755))?;
     // turn relative path into absolute path
     let hooks_path = std::fs::canonicalize(rel_hooks_path)?;
     println!(
