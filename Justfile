@@ -41,7 +41,7 @@ version level:
     cargo update # This bumps Cargo.lock
     VERSION=$(toml get Cargo.toml package.version) && \
         git commit -am "Bump version {{level}} to $VERSION" && \
-        git push origin v$VERSION
+        git push origin HEAD
     git push
 
 release-patch: lint build test
