@@ -1,96 +1,95 @@
 name: Release
 
 on:
-  workflow_call:
-    inputs:
-      publish-tag:
-        required: true
-        type: string
-    secrets:
-      CARGO_REGISTRY_TOKEN:
-        required: true
+    workflow_call:
+        inputs:
+            publish-tag:
+                required: true
+                type: string
+        secrets:
+            CARGO_REGISTRY_TOKEN:
+                required: true
 
 env:
-  RUST_BACKTRACE: 1
-  CARGO_TERM_COLOR: always
+    RUST_BACKTRACE: 1
+    CARGO_TERM_COLOR: always
 
 jobs:
-  create-release:
-    name: Create release
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          persist-credentials: true
+    create-release:
+        name: Create release
+        runs-on: ubuntu-latest
+        if: github.ref == 'refs/heads/main'
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+              with:
+                  persist-credentials: true
 
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
+            - name: Install rust
+              uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: stable
+                  profile: minimal
+                  override: true
 
-      - uses: Swatinem/rust-cache@v2
+            - uses: Swatinem/rust-cache@v2
 
-      - name: Publish
-        run: cargo publish
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+            - name: Publish
+              run: cargo publish
+              env:
+                  CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-      - name: Tag the version
-        run: |
-          git tag "${{ inputs.publish-tag }}"
-          git push origin "${{ inputs.publish-tag }}"
-      - uses: taiki-e/create-gh-release-action@v1
-        name: Create github release
-        with:
-          branch: main
-          ref: refs/tags/${{ inputs.publish-tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Tag the version
+              run: |
+                  git tag "${{ inputs.publish-tag }}"
+                  git push origin "${{ inputs.publish-tag }}"
+            - uses: taiki-e/create-gh-release-action@v1
+              name: Create github release
+              with:
+                  branch: main
+                  ref: refs/tags/${{ inputs.publish-tag }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  upload-binary:
-    name: ${{ matrix.target }}
-    needs:
-      - create-release
-    strategy:
-      matrix:
-        include:
-          - target: aarch64-unknown-linux-gnu
-          - target: aarch64-unknown-linux-musl
-          - target: aarch64-apple-darwin
-            os: macos-latest
-          - target: x86_64-unknown-linux-gnu
-          - target: x86_64-unknown-linux-musl
-          - target: x86_64-apple-darwin
-            os: macos-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          persist-credentials: false
+    upload-binary:
+        name: ${{ matrix.target }}
+        needs:
+            - create-release
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - target: aarch64-unknown-linux-gnu
+                    - target: aarch64-apple-darwin
+                      os: macos-latest
+                    - target: x86_64-unknown-linux-gnu
+                    - target: x86_64-apple-darwin
+                      os: macos-latest
+                    - target: x86_64-pc-windows-msvc
+                      os: windows-latest
+        runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+              with:
+                  persist-credentials: false
 
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
+            - name: Install rust
+              uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: stable
+                  profile: minimal
+                  override: true
 
-      - name: Upload binary
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          bin: gptcommit
-          target: ${{ matrix.target }}
-          ref: refs/tags/${{ inputs.publish-tag }}
-          tar: all
-          zip: windows
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 1
-          CARGO_PROFILE_RELEASE_LTO: true
+            - name: Upload binary
+              uses: taiki-e/upload-rust-binary-action@v1
+              with:
+                  bin: gptcommit
+                  target: ${{ matrix.target }}
+                  ref: refs/tags/${{ inputs.publish-tag }}
+                  tar: all
+                  zip: windows
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 1
+                  CARGO_PROFILE_RELEASE_LTO: true
