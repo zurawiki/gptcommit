@@ -1,130 +1,133 @@
 name: CI
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-  schedule:
-    - cron: '37 6 * * 1-5'  # run once per day Monday-Friday at 7:37am
+    pull_request:
+    push:
+        branches:
+            - main
+    schedule:
+        - cron: "37 6 * * 1-5" # run once per day Monday-Friday at 7:37am
 
 env:
-  RUST_BACKTRACE: 1
-  CARGO_TERM_COLOR: always
+    RUST_BACKTRACE: 1
+    CARGO_TERM_COLOR: always
 
 jobs:
-  just:
-    name: Build & Test ${{ matrix.target }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: aarch64-unknown-linux-gnu
-          - target: x86_64-unknown-linux-gnu
-          - os: macos-latest
-            target: aarch64-apple-darwin
-          - os: macos-latest
-            target: x86_64-apple-darwin
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
-    env:
-        CARGO_BUILD_TARGET: ${{ matrix.target }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
-
-      - uses: Swatinem/rust-cache@v2
-
-      - uses: extractions/setup-just@v1
+    just:
+        name: Build & Test ${{ matrix.target }}
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - target: x86_64-unknown-linux-gnu
+                    - os: macos-latest
+                      target: aarch64-apple-darwin
+                      just_goals: build
+                    - os: macos-latest
+                      target: x86_64-apple-darwin
+                    - os: windows-latest
+                      target: x86_64-pc-windows-msvc
+        runs-on: ${{ matrix.os || 'ubuntu-latest' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            CARGO_BUILD_TARGET: ${{ matrix.target }}
+        steps:
+            - uses: actions/checkout@v3
 
-      - run: just build test
+            - name: Install rust
+              uses: actions-rs/toolchain@v1
+              with:
+                  target: ${{ matrix.target }}
+                  toolchain: stable
+                  profile: minimal
+                  override: true
 
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+            - uses: Swatinem/rust-cache@v2
 
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
+            - uses: extractions/setup-just@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - run: just ${{ matrix.just_goals || 'build test' }}
+
+    lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Install rust
+              uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: stable
+                  override: true
+                  components: rustfmt, clippy
+
+            - uses: Swatinem/rust-cache@v2
+
+            - uses: extractions/setup-just@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - run: just lint
+
+    ci-everything:
+        name: All CI stages
+        runs-on: ubuntu-latest
+        needs:
+            - just
+            - lint
+        steps:
+            - run: exit 0
+
+    init-release:
+        name: Run the release workflow
+        needs:
+            - should-publish
+            - ci-everything
+        if: needs.should-publish.outputs.is_new_version == 'yes' && github.ref == 'refs/heads/main'
+        uses: ./.github/workflows/release.yml
         with:
-          toolchain: stable
+            publish-tag: ${{ needs.should-publish.outputs.publish-tag }}
+        secrets:
+            CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-      - uses: Swatinem/rust-cache@v2
+    should-publish:
+        name: Check if version changed
+        runs-on: ubuntu-latest
+        outputs:
+            is_new_version: ${{ steps.check.outputs.is_new_version }}
+            publish-tag: ${{ steps.tag.outputs.tag }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+              with:
+                  persist-credentials: false
 
-      - uses: extractions/setup-just@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Install rust
+              uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: stable
+                  profile: minimal
+                  override: true
 
-      - run: just lint
+            - uses: Swatinem/rust-cache@v2
 
-  ci-everything:
-    name: All CI stages
-    runs-on: ubuntu-latest
-    needs:
-      - just
-      - lint
-    steps:
-      - run: exit 0
+            - id: check
+              run: |
+                  set +e
+                  ./scripts/is_version_already_uploaded.sh gptcommit
+                  export EXIT_CODE="$?"
+                  set -e
+                  if [[ "$EXIT_CODE" == "7" ]]; then
+                    echo '::set-output name=is_new_version::no'
+                  elif [[ "$EXIT_CODE" == "0" ]]; then
+                    echo '::set-output name=is_new_version::yes'
+                  else
+                    # Unexpected outcome, indicates a bug.
+                    exit "$EXIT_CODE"
+                  fi
 
-  init-release:
-    name: Run the release workflow
-    needs:
-      - should-publish
-      - ci-everything
-    if: needs.should-publish.outputs.is_new_version == 'yes' && github.ref == 'refs/heads/main'
-    uses: ./.github/workflows/release.yml
-    with:
-      publish-tag: ${{ needs.should-publish.outputs.publish-tag }}
-    secrets:
-      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-
-  should-publish:
-    name: Check if version changed
-    runs-on: ubuntu-latest
-    outputs:
-      is_new_version: ${{ steps.check.outputs.is_new_version }}
-      publish-tag: ${{ steps.tag.outputs.tag }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
-
-      - uses: Swatinem/rust-cache@v2
-
-      - id: check
-        run: |
-          set +e
-          ./scripts/is_version_already_uploaded.sh gptcommit
-          export EXIT_CODE="$?"
-          set -e
-          if [[ "$EXIT_CODE" == "7" ]]; then
-            echo '::set-output name=is_new_version::no'
-          elif [[ "$EXIT_CODE" == "0" ]]; then
-            echo '::set-output name=is_new_version::yes'
-          else
-            # Unexpected outcome, indicates a bug.
-            exit "$EXIT_CODE"
-          fi
-
-      - name: Determine the tag name
-        id: tag
-        run: |
-          export TAG_NAME="v$(./scripts/get_current_version.sh gptcommit)"
-          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+            - name: Determine the tag name
+              id: tag
+              run: |
+                  export TAG_NAME="v$(./scripts/get_current_version.sh gptcommit)"
+                  echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
