@@ -41,7 +41,6 @@ version level:
     cargo update # This bumps Cargo.lock
     VERSION=$(toml get Cargo.toml package.version) && \
         git commit -am "Bump version {{level}} to $VERSION" && \
-        git tag v$VERSION && \
         git push origin v$VERSION
     git push
 
