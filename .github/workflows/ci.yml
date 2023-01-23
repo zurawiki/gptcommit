@@ -20,20 +20,26 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         just_cmd:
-          - "build"
-          - "test"
+          - build test
         include:
           - os: ubuntu-latest
             just_cmd: lint
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          profile: minimal
+          override: true
+
       - uses: Swatinem/rust-cache@v2
+
       - uses: extractions/setup-just@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - run: just ${{ matrix.just_cmd }}
 
   ci-everything:
@@ -91,6 +97,7 @@ jobs:
             # Unexpected outcome, indicates a bug.
             exit "$EXIT_CODE"
           fi
+
       - name: Determine the tag name
         id: tag
         run: |
