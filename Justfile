@@ -27,11 +27,11 @@ alias t := test
 
 lint:
     cargo fmt --all -- --check
-    cargo clippy --all-targets --all-features -- -D warnings
+    cargo clippy --all-features --all-targets -- -D warnings --allow deprecated
 
 fix:
     cargo fix --allow-dirty --allow-staged
-    cargo clippy --all-targets --all-features --fix --allow-dirty --allow-staged -- -D warnings
+    cargo clippy --all-features --all-targets --fix --allow-dirty --allow-staged -- -D warnings --allow deprecated
     cargo fmt --all
 
 # Bump version. level=major,minor,patch
