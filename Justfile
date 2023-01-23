@@ -45,9 +45,11 @@ version level:
         git push origin v$VERSION
     git push
 
-publish:
-    cargo publish
-
-patch: test
+release-patch: lint build test
     just version patch
-    just publish
+
+release-minor: lint build test
+    just version minor
+
+release-major: lint build test
+    just version major
