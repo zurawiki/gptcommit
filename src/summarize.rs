@@ -1,5 +1,5 @@
 use crate::openai::OpenAIClient;
-use anyhow::{bail, Result};
+use anyhow::Result;
 
 static PROMPT_TO_SUMMARIZE_DIFF: &str = r#"You are an expert programmer, and you are trying to summarize a git diff.
 Reminders about the git diff format:
@@ -71,8 +71,6 @@ Schedule all GitHub actions on all OSs
 
 "#;
 
-const MAX_SUMMARY_LENGTH: usize = 3000;
-
 pub(crate) async fn diff_summary(
     client: &OpenAIClient,
     file_name: &str,
@@ -80,10 +78,8 @@ pub(crate) async fn diff_summary(
 ) -> Result<String> {
     debug!("summarizing file: {}", file_name);
 
-    if file_diff.len() < MAX_SUMMARY_LENGTH {
-        // filter large diffs
-        let prompt = format!(
-            r#"{}
+    let prompt = format!(
+        r#"{}
 
 THE GIT DIFF TO BE SUMMARIZED:
 ```
@@ -92,21 +88,11 @@ ${}
 
 THE SUMMARY:
 "#,
-            PROMPT_TO_SUMMARIZE_DIFF, file_diff
-        );
+        PROMPT_TO_SUMMARIZE_DIFF, file_diff
+    );
 
-        let completion = client.completions(&prompt).await;
-        completion
-    } else {
-        let error_msg = format!(
-            "skipping large file {}, len: {} < {}",
-            file_name,
-            file_diff.len(),
-            MAX_SUMMARY_LENGTH
-        );
-        warn!("{}", error_msg);
-        bail!(error_msg)
-    }
+    let completion = client.completions(&prompt).await;
+    completion
 }
 
 pub(crate) async fn commit_summary(client: &OpenAIClient, summary_points: &str) -> Result<String> {
