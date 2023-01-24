@@ -1,6 +1,5 @@
 use actions::prepare_commit_msg::PrepareCommitMsgArgs;
-use log::LevelFilter;
-use simple_logger::SimpleLogger;
+
 #[macro_use]
 extern crate log;
 mod cmd;
@@ -13,6 +12,11 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 mod actions;
+mod settings;
+
+use log::LevelFilter;
+use settings::Settings;
+use simple_logger::SimpleLogger;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -36,9 +40,8 @@ enum Action {
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    debug!("{:?}", cli);
+    debug!("Cli args: {:?}", cli);
 
-    // Remove dates from logger
     SimpleLogger::new()
         .with_level(if cli.verbose {
             LevelFilter::Debug
@@ -48,8 +51,11 @@ async fn main() -> Result<()> {
         .env()
         .init()?;
 
+    let settings = Settings::new()?;
+    debug!("Settings: {:?}", settings);
+
     match cli.action {
-        Action::Install => actions::install::main().await,
-        Action::PrepareCommitMsg(cli) => actions::prepare_commit_msg::main(cli).await,
+        Action::Install => actions::install::main(settings).await,
+        Action::PrepareCommitMsg(cli) => actions::prepare_commit_msg::main(settings, cli).await,
     }
 }
