@@ -5,11 +5,10 @@ use serde_json::{json, Value};
 
 use crate::settings::OpenAISettings;
 
-// create an api client that takes settings
-// make moveable in a thread
 #[derive(Clone, Debug)]
 pub(crate) struct OpenAIClient {
     api_key: String,
+    model: String,
     client: Client,
 }
 
@@ -19,8 +18,13 @@ impl OpenAIClient {
         if api_key.is_empty() {
             bail!("No OpenAI API key found.")
         }
+        let model = settings.model.unwrap_or_default();
+        if model.is_empty() {
+            bail!("No OpenAI model configured.")
+        }
         Ok(Self {
             api_key,
+            model,
             client: Client::new(),
         })
     }
@@ -29,7 +33,7 @@ impl OpenAIClient {
     /// It takes a prompt as input, and returns the completion.
     pub(crate) async fn completions(&self, prompt: &str) -> Result<String> {
         let json_data = json!({
-            "model": "text-davinci-003",
+            "model": self.model,
             "prompt": prompt,
             "temperature": 0.5,
             "max_tokens": 100,
