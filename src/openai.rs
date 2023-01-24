@@ -32,6 +32,19 @@ impl OpenAIClient {
     /// Sends a request to OpenAI's API to get a text completion.
     /// It takes a prompt as input, and returns the completion.
     pub(crate) async fn completions(&self, prompt: &str) -> Result<String> {
+        let prompt_token_limit = self.get_prompt_token_limit_for_model();
+        // TODO use real tokenizer. Right now we assume, 1 word = 2 tokens
+        let prompt_token_count = prompt.split_whitespace().filter(|s| !s.is_empty()).count() * 2;
+
+        if prompt_token_count > prompt_token_limit {
+            let error_msg = format!(
+                "skipping... token count: {} < {}",
+                prompt_token_count, prompt_token_limit
+            );
+            warn!("{}", error_msg);
+            bail!(error_msg)
+        }
+
         let json_data = json!({
             "model": self.model,
             "prompt": prompt,
@@ -63,5 +76,12 @@ impl OpenAIClient {
             .as_str()
             .ok_or_else(|| anyhow!("Unexpected JSON response:\n{}", json_response))?
             .to_string())
+    }
+
+    pub(crate) fn get_prompt_token_limit_for_model(&self) -> usize {
+        match self.model.as_str() {
+            "text-davinci-003" => 4000,
+            _ => 2048,
+        }
     }
 }
