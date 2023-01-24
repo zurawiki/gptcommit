@@ -10,9 +10,9 @@ use std::{fs::Permissions, os::unix::prelude::PermissionsExt};
 use anyhow::{bail, Result};
 use colored::Colorize;
 
-use crate::cmd::find_executable;
+use crate::{cmd::find_executable, settings::Settings};
 
-pub(crate) async fn main() -> Result<()> {
+pub(crate) async fn main(_settings: Settings) -> Result<()> {
     println!("{}", "Installing gptcommit hook...".green().bold());
 
     find_executable("git", "To use gptcommit, you must have git on your PATH")?;

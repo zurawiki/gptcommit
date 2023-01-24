@@ -16,7 +16,10 @@ use std::path::PathBuf;
 use tokio::task::JoinSet;
 
 use crate::git;
-use crate::openai;
+
+use crate::openai::OpenAIClient;
+
+use crate::settings::Settings;
 use crate::summarize;
 use crate::util;
 
@@ -28,9 +31,9 @@ use crate::util;
 /// The function assumes that the file_diff input is well-formed
 /// according to the Diff format described in the Git documentation:
 /// https://git-scm.com/docs/git-diff
-async fn process_file_diff(file_diff: &str) -> Option<(String, String)> {
+async fn process_file_diff(client: &OpenAIClient, file_diff: &str) -> Option<(String, String)> {
     if let Some(file_name) = util::get_file_name_from_diff(file_diff) {
-        let completion = summarize::diff_summary(file_name, file_diff).await;
+        let completion = summarize::diff_summary(client, file_name, file_diff).await;
         Some((
             file_name.to_string(),
             completion.unwrap_or_else(|_| "".to_string()),
@@ -74,7 +77,7 @@ pub(crate) struct PrepareCommitMsgArgs {
     git_diff_content: Option<PathBuf>,
 }
 
-pub(crate) async fn main(args: PrepareCommitMsgArgs) -> Result<()> {
+pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Result<()> {
     match args.commit_source {
         CommitSource::Empty => {}
         CommitSource::Commit => {
@@ -87,19 +90,32 @@ pub(crate) async fn main(args: PrepareCommitMsgArgs) -> Result<()> {
         }
     };
 
-    // TODO unify api key retrieval
-    if let Err(err_msg) = openai::get_openai_api_key() {
-        println!(
-            "{}",
-            r#"OPENAI_API_KEY not found in environment.
+    let client = match OpenAIClient::new(settings.openai.unwrap_or_default()) {
+        Ok(client) => client,
+        Err(_e) => {
+            println!(
+                "{}",
+            r#"OpenAI API key not found in config or environment.
+
 Configure the OpenAI API key with the command:
 
-    export OPENAI_API_KEY='sk-...'
+    export GPTCOMMIT__OPENAI__API_KEY='sk-...'
+
+Or add the following to your ~/.config/gptcommit/config.toml file:
+```
+model_provider = "openai"
+
+[openai]
+api_key = "sk-..."
+```
+
+Note: OPENAI_API_KEY will be deprecated in a future release. Please use GPTCOMMIT__OPENAI__API_KEY instead, or a config file.
 "#
             .bold()
             .yellow(),
         );
-        bail!(err_msg);
+            bail!("OpenAI API key not found in config or environment");
+        }
     };
 
     println!("{}", "🤖 Asking GPT-3 to summarize diffs...".green().bold());
@@ -116,7 +132,8 @@ Configure the OpenAI API key with the command:
 
     for file_diff in file_diffs {
         let file_diff = file_diff.to_owned();
-        set.spawn(async move { process_file_diff(&file_diff).await });
+        let client = client.to_owned();
+        set.spawn(async move { process_file_diff(&client, &file_diff).await });
     }
 
     let mut summary_for_file: HashMap<String, String> = HashMap::with_capacity(set.len());
@@ -133,8 +150,8 @@ Configure the OpenAI API key with the command:
         .join("\n");
 
     let (title, completion) = try_join!(
-        summarize::commit_title(summary_points),
-        summarize::commit_summary(summary_points)
+        summarize::commit_title(&client, summary_points),
+        summarize::commit_summary(&client, summary_points)
     )?;
 
     // overwrite commit message file

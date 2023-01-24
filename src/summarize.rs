@@ -1,4 +1,4 @@
-use crate::openai;
+use crate::openai::OpenAIClient;
 use anyhow::{bail, Result};
 
 static PROMPT_TO_SUMMARIZE_DIFF: &str = r#"You are an expert programmer, and you are trying to summarize a git diff.
@@ -73,7 +73,11 @@ Schedule all GitHub actions on all OSs
 
 const MAX_SUMMARY_LENGTH: usize = 3000;
 
-pub(crate) async fn diff_summary(file_name: &str, file_diff: &str) -> Result<String> {
+pub(crate) async fn diff_summary(
+    client: &OpenAIClient,
+    file_name: &str,
+    file_diff: &str,
+) -> Result<String> {
     debug!("summarizing file: {}", file_name);
 
     if file_diff.len() < MAX_SUMMARY_LENGTH {
@@ -91,7 +95,7 @@ THE SUMMARY:
             PROMPT_TO_SUMMARIZE_DIFF, file_diff
         );
 
-        let completion = openai::completions(&prompt).await;
+        let completion = client.completions(&prompt).await;
         completion
     } else {
         let error_msg = format!(
@@ -105,7 +109,7 @@ THE SUMMARY:
     }
 }
 
-pub(crate) async fn commit_summary(summary_points: &str) -> Result<String> {
+pub(crate) async fn commit_summary(client: &OpenAIClient, summary_points: &str) -> Result<String> {
     let prompt = format!(
         r#"{}
 
@@ -120,12 +124,12 @@ THE pull request SUMMARY:
         PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES, summary_points
     );
 
-    let completion = openai::completions(&prompt).await;
+    let completion = client.completions(&prompt).await;
 
     completion
 }
 
-pub(crate) async fn commit_title(summary_points: &str) -> Result<String> {
+pub(crate) async fn commit_title(client: &OpenAIClient, summary_points: &str) -> Result<String> {
     let prompt = format!(
         r#"{}
 
@@ -140,7 +144,7 @@ THE PULL REQUEST TITLE:
         PROMPT_TO_SUMMARIZE_DIFF_TITLE, summary_points
     );
 
-    let completion = openai::completions(&prompt).await;
+    let completion = client.completions(&prompt).await;
 
     completion
 }
