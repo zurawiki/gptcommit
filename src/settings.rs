@@ -48,6 +48,7 @@ impl<'de> serde::Deserialize<'de> for ModelProvider {
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct OpenAISettings {
     pub api_key: Option<String>,
+    pub model: Option<String>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
@@ -61,6 +62,7 @@ impl From<OpenAISettings> for config::ValueKind {
     fn from(settings: OpenAISettings) -> Self {
         let mut properties = HashMap::new();
         properties.insert("api_key".to_string(), config::Value::from(settings.api_key));
+        properties.insert("model".to_string(), config::Value::from(settings.model));
         Self::Table(properties)
     }
 }
@@ -83,7 +85,13 @@ impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
         let mut settings = Config::builder()
             .set_default("model_provider", ModelProvider::OpenAI)?
-            .set_default("open_ai", OpenAISettings { api_key: None })?;
+            .set_default(
+                "openai",
+                OpenAISettings {
+                    api_key: None,
+                    model: Some("text-davinci-003".to_string()),
+                },
+            )?;
 
         if let Some(home_dir) = dirs::home_dir() {
             debug!("Using home dir at {}", home_dir.display());
