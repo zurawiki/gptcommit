@@ -1,6 +1,7 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, path::PathBuf, str::FromStr};
 
 use config::{Config, ConfigError, Environment, File, Source};
+use serde::Serialize;
 use serde_derive::Deserialize;
 use strum_macros::EnumString;
 
@@ -8,10 +9,11 @@ use strum_macros::EnumString;
 use std::string::ToString;
 use strum_macros::Display;
 
-#[derive(Debug, Clone, Display, Default, EnumString)]
+#[derive(Debug, Clone, Display, Serialize, Default, EnumString)]
 pub enum ModelProvider {
     #[default]
     #[strum(serialize = "openai")]
+    #[serde(rename = "openai")]
     OpenAI,
 }
 
@@ -43,12 +45,12 @@ impl<'de> serde::Deserialize<'de> for ModelProvider {
     }
 }
 
-#[derive(Debug, Default, Deserialize, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct OpenAISettings {
     pub api_key: Option<String>,
 }
 
-#[derive(Debug, Default, Deserialize, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct Settings {
     pub model_provider: Option<ModelProvider>,
     pub openai: Option<OpenAISettings>,
@@ -63,6 +65,18 @@ impl From<OpenAISettings> for config::ValueKind {
     }
 }
 
+pub fn get_user_config_path() -> Option<PathBuf> {
+    if let Some(home_dir) = dirs::home_dir() {
+        let config_dir = home_dir.join(".config").join(APP_NAME);
+        if config_dir.is_dir() {
+            let config_path = config_dir.join("config.toml");
+            if config_path.is_file() {
+                return Some(config_path);
+            }
+        }
+    }
+    None
+}
 const APP_NAME: &str = "gptcommit";
 
 impl Settings {
