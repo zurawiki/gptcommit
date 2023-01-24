@@ -1,4 +1,4 @@
-use actions::prepare_commit_msg::PrepareCommitMsgArgs;
+use actions::{config::ConfigArgs, prepare_commit_msg::PrepareCommitMsgArgs};
 
 #[macro_use]
 extern crate log;
@@ -33,6 +33,8 @@ struct Cli {
 enum Action {
     /// Install the git hook
     Install,
+    /// Read and modify settings
+    Config(ConfigArgs),
     /// Run on the prepare-commit-msg hook
     PrepareCommitMsg(PrepareCommitMsgArgs),
 }
@@ -40,7 +42,7 @@ enum Action {
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    debug!("Cli args: {:?}", cli);
+    debug!("CLI args: {:?}", cli);
 
     SimpleLogger::new()
         .with_level(if cli.verbose {
@@ -55,6 +57,7 @@ async fn main() -> Result<()> {
     debug!("Settings: {:?}", settings);
 
     match cli.action {
+        Action::Config(cli) => actions::config::main(settings, cli).await,
         Action::Install => actions::install::main(settings).await,
         Action::PrepareCommitMsg(cli) => actions::prepare_commit_msg::main(settings, cli).await,
     }
