@@ -38,6 +38,38 @@ Note: By default, `gptcommit` uses the GPT-3 model. Please ensure you have suffi
 
 **n.b.** If your OpenAI API key has changed, simply re-run `gptcommit install`.
 
+## Features
+
+`gptcommit` supports a number of configuration options that are read from `$HOME/.config/gptcommit/config.toml`.
+Configs are applied in the following order:
+
+- User settings as read from `$HOME/.config/gptcommit/config.toml`.
+- Environment variables starting with `GPTCOMMIT__*`.
+
+### Set your OpenAI API key
+
+Persist your OpenAI key
+
+```sh
+gptcommit config set openai.api_key sk-...
+```
+
+You can also config this setting via the `GPTCOMMIT__OPENAI__API_KEY`.
+
+To maintain compatibility with other OpenAI clients, we support the `OPENAI_API_KEY` environment variables. This will take the highest precedence.
+
+### Try out a different OpenAI model
+
+`gptcommit` uses `text-davinci-003` by default. The model can be configured to use other models as below
+
+```sh
+gptcommit config set openai.model text-davinci-002
+```
+
+You can also config this setting via the `GPTCOMMIT__OPENAI__MODEL`.
+
+For a list of public OpenAI models, checkout the [OpenAI docs](https://beta.openai.com/docs/models/overview). You can also bring in your own fine-tuned model.
+
 ## Encountered any bugs?
 
 If you encounter any bugs or have any suggestions for improvements, please open an issue on the repository.
