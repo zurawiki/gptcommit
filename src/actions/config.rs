@@ -4,7 +4,7 @@ use clap::{Args, Subcommand};
 use toml::Value;
 
 use crate::settings::{get_user_config_path, Settings};
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum ConfigAction {
@@ -39,91 +39,24 @@ pub(crate) async fn main(settings: Settings, args: ConfigArgs) -> Result<()> {
     }
 }
 
-async fn delete(settings: Settings, full_key: String) -> Result<()> {
+async fn delete(_settings: Settings, full_key: String) -> Result<()> {
+    let settings = &Settings::from_clear(&full_key)?;
+    let toml_string = toml::to_string_pretty(settings).unwrap();
     let user_config_path = get_user_config_path().expect("Could not find user config path");
-    let toml_string = toml::to_string_pretty(&settings).unwrap();
-
-    let mut root: Value = toml::from_str(&toml_string)?;
-
-    let mut node: &mut Value = &mut root;
-    let mut path = key_to_path(&full_key);
-
-    // Find the node that we want to set the value on
-    while path.len() > 1 {
-        let key = path.get(0).unwrap();
-        if let Some(child_config) = node.get_mut(key) {
-            node = child_config;
-            path.pop_front();
-        } else {
-            bail!("Config key {} not found", &full_key);
-        }
-    }
-
-    if path.len() == 1 {
-        let last_key = path.get(0).unwrap();
-        if node.get_mut(last_key).unwrap().is_table() || node.get_mut(last_key).unwrap().is_array()
-        {
-            bail!(
-                "Config key {} is a table or array, cannot clear value",
-                &full_key
-            );
-        }
-        //set node value to value
-        node.as_table_mut().unwrap().remove(path.get(0).unwrap());
-        // write out new root toml
-        let new_toml_str = toml::to_string_pretty(&root).unwrap();
-        // write out new root toml
-        fs::write(user_config_path, new_toml_str)?;
-        println!("Cleared {}", full_key);
-        Ok(())
-    } else {
-        Err(anyhow::anyhow!("Config key {} not found", full_key))
-    }
+    fs::write(&user_config_path, toml_string)?;
+    println!("Cleared {}", full_key);
+    println!("Config saved to {}", user_config_path.display());
+    Ok(())
 }
 
-async fn set(settings: Settings, full_key: String, value: String) -> Result<()> {
+async fn set(_settings: Settings, full_key: String, value: String) -> Result<()> {
+    let settings = &Settings::from_set_override(&full_key, &value)?;
+    let toml_string = toml::to_string_pretty(settings).unwrap();
     let user_config_path = get_user_config_path().expect("Could not find user config path");
-    let toml_string = toml::to_string_pretty(&settings).unwrap();
-
-    let mut root: Value = toml::from_str(&toml_string)?;
-
-    let mut node: &mut Value = &mut root;
-    let mut path = key_to_path(&full_key);
-
-    // Find the node that we want to set the value on
-    while path.len() > 1 {
-        let key = path.get(0).unwrap();
-        if let Some(child_config) = node.get_mut(key) {
-            node = child_config;
-            path.pop_front();
-        } else {
-            bail!("Config key {} not found", &full_key);
-        }
-    }
-
-    if path.len() == 1 {
-        let last_key = path.get(0).unwrap();
-        if node.get_mut(last_key).unwrap().is_table() || node.get_mut(last_key).unwrap().is_array()
-        {
-            bail!(
-                "Config key {} is a table or array, cannot set value",
-                &full_key
-            );
-        }
-        //set node value to value
-        node.as_table_mut().unwrap().insert(
-            path.get(0).unwrap().to_owned(),
-            toml::Value::String(value.to_owned()),
-        );
-        // write out new root toml
-        let new_toml_str = toml::to_string_pretty(&root).unwrap();
-        // write out new root toml
-        fs::write(user_config_path, new_toml_str)?;
-        println!("{} = {}", full_key, value);
-        Ok(())
-    } else {
-        Err(anyhow::anyhow!("Config key {} not found", full_key))
-    }
+    fs::write(&user_config_path, toml_string)?;
+    println!("{} = {}", full_key, value);
+    println!("Config saved to {}", user_config_path.display());
+    Ok(())
 }
 
 fn key_to_path(key: &str) -> VecDeque<String> {

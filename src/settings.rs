@@ -116,6 +116,130 @@ pub fn get_user_config_path() -> Option<PathBuf> {
 const APP_NAME: &str = "gptcommit";
 
 impl Settings {
+    pub fn from_clear(key: &str) -> Result<Self, ConfigError> {
+        let mut settings = Config::builder()
+            .set_default("model_provider", ModelProvider::OpenAI)?
+            .set_default(
+                "openai",
+                Some(OpenAISettings {
+                    api_key: None,
+                    model: Some("text-davinci-003".to_string()),
+                }),
+            )?
+            .set_default(
+                "prompt",
+                Some(PromptSettings {
+                    file_diff: Some(PROMPT_TO_SUMMARIZE_DIFF.to_string()),
+                    commit_summary: Some(PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES.to_string()),
+                    commit_title: Some(PROMPT_TO_SUMMARIZE_DIFF_TITLE.to_string()),
+                }),
+            )?;
+
+        if let Some(home_dir) = dirs::home_dir() {
+            debug!("Using home dir at {}", home_dir.display());
+
+            let config_dir = home_dir.join(".config").join(APP_NAME);
+            if config_dir.is_dir() {
+                debug!("Found config dir at {}", config_dir.display());
+
+                let config_path = config_dir.join("config.toml");
+                if config_path.is_file() {
+                    debug!("Applying config file at {}", config_path.display());
+                    settings = settings.add_source(File::from(config_path));
+                } else {
+                    debug!("Config file at {} is not a file", config_path.display());
+                }
+            } else {
+                debug!("Config dir at {} is not a dir", config_dir.display());
+            }
+        }
+
+        // Add in settings from the environment (with a prefix of GPTCOMMIT)
+        // Eg.. `GPTCOMMIT__DEBUG=1 ./target/app` would set the `debug` key
+
+        let app_env = Environment::with_prefix(APP_NAME).separator("__");
+        debug!(
+            "Applying config from  GPTCOMMIT__*: {:?}",
+            app_env.collect()
+        );
+        settings = settings.add_source(app_env);
+
+        // add custom override
+        if let Ok(openai_api_key) = std::env::var("OPENAI_API_KEY") {
+            if !openai_api_key.is_empty() {
+                debug!("Applying OPENAI_API_KEY envvar: {}", openai_api_key);
+                settings = settings.set_override("openai.api_key", Some(openai_api_key))?;
+            }
+        }
+
+        settings = settings.set_override(key, None::<Option<String>>)?;
+
+        // Freeze the entire configuration
+        settings.build()?.try_deserialize()
+    }
+
+    pub fn from_set_override(key: &str, value: &str) -> Result<Self, ConfigError> {
+        let mut settings = Config::builder()
+            .set_default("model_provider", ModelProvider::OpenAI)?
+            .set_default(
+                "openai",
+                Some(OpenAISettings {
+                    api_key: None,
+                    model: Some("text-davinci-003".to_string()),
+                }),
+            )?
+            .set_default(
+                "prompt",
+                Some(PromptSettings {
+                    file_diff: Some(PROMPT_TO_SUMMARIZE_DIFF.to_string()),
+                    commit_summary: Some(PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES.to_string()),
+                    commit_title: Some(PROMPT_TO_SUMMARIZE_DIFF_TITLE.to_string()),
+                }),
+            )?;
+
+        if let Some(home_dir) = dirs::home_dir() {
+            debug!("Using home dir at {}", home_dir.display());
+
+            let config_dir = home_dir.join(".config").join(APP_NAME);
+            if config_dir.is_dir() {
+                debug!("Found config dir at {}", config_dir.display());
+
+                let config_path = config_dir.join("config.toml");
+                if config_path.is_file() {
+                    debug!("Applying config file at {}", config_path.display());
+                    settings = settings.add_source(File::from(config_path));
+                } else {
+                    debug!("Config file at {} is not a file", config_path.display());
+                }
+            } else {
+                debug!("Config dir at {} is not a dir", config_dir.display());
+            }
+        }
+
+        // Add in settings from the environment (with a prefix of GPTCOMMIT)
+        // Eg.. `GPTCOMMIT__DEBUG=1 ./target/app` would set the `debug` key
+
+        let app_env = Environment::with_prefix(APP_NAME).separator("__");
+        debug!(
+            "Applying config from  GPTCOMMIT__*: {:?}",
+            app_env.collect()
+        );
+        settings = settings.add_source(app_env);
+
+        // add custom override
+        if let Ok(openai_api_key) = std::env::var("OPENAI_API_KEY") {
+            if !openai_api_key.is_empty() {
+                debug!("Applying OPENAI_API_KEY envvar: {}", openai_api_key);
+                settings = settings.set_override("openai.api_key", Some(openai_api_key))?;
+            }
+        }
+
+        settings = settings.set_override(key, value)?;
+
+        // Freeze the entire configuration
+        settings.build()?.try_deserialize()
+    }
+
     pub fn new() -> Result<Self, ConfigError> {
         let mut settings = Config::builder()
             .set_default("model_provider", ModelProvider::OpenAI)?
