@@ -9,7 +9,11 @@ use anyhow::Result;
 #[derive(Subcommand, Debug)]
 pub(crate) enum ConfigAction {
     /// List all config values
-    List,
+    List {
+        /// if set, will save the config to the user's config file
+        #[clap(long)]
+        save: bool,
+    },
     /// Read config value
     Get { key: String },
     /// Set config value
@@ -28,7 +32,7 @@ pub(crate) async fn main(settings: Settings, args: ConfigArgs) -> Result<()> {
     debug!("Config subcommand - Settings = {:?}", settings);
 
     match args.action {
-        ConfigAction::List => list(settings).await,
+        ConfigAction::List { save } => list(settings, save).await,
         ConfigAction::Get { key } => get(settings, key).await,
         ConfigAction::Set { key, value } => set(settings, key, value).await,
         ConfigAction::Delete { key } => delete(settings, key).await,
@@ -148,8 +152,13 @@ async fn get(settings: Settings, full_key: String) -> Result<()> {
     Ok(())
 }
 
-async fn list(settings: Settings) -> Result<()> {
+async fn list(settings: Settings, save: bool) -> Result<()> {
     let toml_string = toml::to_string_pretty(&settings).unwrap();
     println!("{}", toml_string);
+    if save {
+        let user_config_path = get_user_config_path().expect("Could not find user config path");
+        fs::write(&user_config_path, toml_string)?;
+        println!("Config saved to {}", user_config_path.display());
+    }
     Ok(())
 }
