@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::PathBuf, str::FromStr};
+use std::{collections::HashMap, fs, path::PathBuf, str::FromStr};
 
 use config::{Config, ConfigError, Environment, File, Source};
 use serde::Serialize;
@@ -102,12 +102,14 @@ pub struct Settings {
 pub fn get_user_config_path() -> Option<PathBuf> {
     if let Some(home_dir) = dirs::home_dir() {
         let config_dir = home_dir.join(".config").join(APP_NAME);
-        if config_dir.is_dir() {
-            let config_path = config_dir.join("config.toml");
-            if config_path.is_file() {
-                return Some(config_path);
-            }
+        if !config_dir.is_dir() {
+            fs::create_dir_all(&config_dir).ok()?;
         }
+        let config_path = config_dir.join("config.toml");
+        if !config_path.exists() {
+            fs::write(&config_path, "").ok()?;
+        }
+        return Some(config_path);
     }
     None
 }

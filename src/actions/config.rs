@@ -4,7 +4,7 @@ use clap::{Args, Subcommand};
 use toml::Value;
 
 use crate::settings::{get_user_config_path, Settings};
-use anyhow::Result;
+use anyhow::{Result, bail};
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum ConfigAction {
@@ -55,7 +55,7 @@ async fn delete(settings: Settings, full_key: String) -> Result<()> {
             node = child_config;
             path.pop_front();
         } else {
-            return Err(anyhow::anyhow!("Config key {} not found", &full_key));
+            bail!("Config key {} not found", &full_key);
         }
     }
 
@@ -63,10 +63,10 @@ async fn delete(settings: Settings, full_key: String) -> Result<()> {
         let last_key = path.get(0).unwrap();
         if node.get_mut(last_key).unwrap().is_table() || node.get_mut(last_key).unwrap().is_array()
         {
-            return Err(anyhow::anyhow!(
+            bail!(
                 "Config key {} is a table or array, cannot clear value",
                 &full_key
-            ));
+            );
         }
         //set node value to value
         node.as_table_mut().unwrap().remove(path.get(0).unwrap());
@@ -97,7 +97,7 @@ async fn set(settings: Settings, full_key: String, value: String) -> Result<()> 
             node = child_config;
             path.pop_front();
         } else {
-            return Err(anyhow::anyhow!("Config key {} not found", &full_key));
+            bail!("Config key {} not found", &full_key);
         }
     }
 
@@ -105,10 +105,10 @@ async fn set(settings: Settings, full_key: String, value: String) -> Result<()> 
         let last_key = path.get(0).unwrap();
         if node.get_mut(last_key).unwrap().is_table() || node.get_mut(last_key).unwrap().is_array()
         {
-            return Err(anyhow::anyhow!(
+            bail!(
                 "Config key {} is a table or array, cannot set value",
                 &full_key
-            ));
+            );
         }
         //set node value to value
         node.as_table_mut().unwrap().insert(
@@ -140,14 +140,14 @@ async fn get(settings: Settings, full_key: String) -> Result<()> {
             node = child_config;
             path.pop_front();
         } else {
-            return Err(anyhow::anyhow!("Config key {} not found", full_key));
+            bail!("Config key {} not found", full_key);
         }
     }
 
     if path.is_empty() {
         println!("{}", node.as_str().unwrap_or(""));
     } else {
-        return Err(anyhow::anyhow!("Config key {} not found", full_key));
+        bail!("Config key {} not found", full_key);
     }
     Ok(())
 }
