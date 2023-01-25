@@ -1,6 +1,8 @@
+use std::time::Duration;
+
 use anyhow::{anyhow, bail, Result};
 
-use reqwest::Client;
+use reqwest::{Client, ClientBuilder};
 use serde_json::{json, Value};
 
 use crate::settings::OpenAISettings;
@@ -22,10 +24,13 @@ impl OpenAIClient {
         if model.is_empty() {
             bail!("No OpenAI model configured.")
         }
+
+        let timeout = Duration::new(15, 0);
+        let client = ClientBuilder::new().timeout(timeout).build()?;
         Ok(Self {
             api_key,
             model,
-            client: Client::new(),
+            client,
         })
     }
 
@@ -54,6 +59,7 @@ impl OpenAIClient {
             "frequency_penalty": 0,
             "presence_penalty": 0
         });
+
         let request = self
             .client
             .post("https://api.openai.com/v1/completions")
