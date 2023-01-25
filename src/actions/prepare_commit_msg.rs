@@ -20,7 +20,7 @@ use crate::git;
 use crate::openai::OpenAIClient;
 
 use crate::settings::Settings;
-use crate::summarize;
+use crate::summarize::SummarizationClient;
 use crate::util;
 
 /// Splits the contents of a git diff by file.
@@ -31,9 +31,12 @@ use crate::util;
 /// The function assumes that the file_diff input is well-formed
 /// according to the Diff format described in the Git documentation:
 /// https://git-scm.com/docs/git-diff
-async fn process_file_diff(client: &OpenAIClient, file_diff: &str) -> Option<(String, String)> {
+async fn process_file_diff(
+    summarize_client: SummarizationClient,
+    file_diff: &str,
+) -> Option<(String, String)> {
     if let Some(file_name) = util::get_file_name_from_diff(file_diff) {
-        let completion = summarize::diff_summary(client, file_name, file_diff).await;
+        let completion = summarize_client.diff_summary(file_name, file_diff).await;
         Some((
             file_name.to_string(),
             completion.unwrap_or_else(|_| "".to_string()),
@@ -117,6 +120,7 @@ Note: OPENAI_API_KEY will be deprecated in a future release. Please use GPTCOMMI
             bail!("OpenAI API key not found in config or environment");
         }
     };
+    let summarize_client = SummarizationClient::new(settings.prompt.unwrap(), client)?;
 
     println!("{}", "🤖 Asking GPT-3 to summarize diffs...".green().bold());
 
@@ -132,8 +136,8 @@ Note: OPENAI_API_KEY will be deprecated in a future release. Please use GPTCOMMI
 
     for file_diff in file_diffs {
         let file_diff = file_diff.to_owned();
-        let client = client.to_owned();
-        set.spawn(async move { process_file_diff(&client, &file_diff).await });
+        let summarize_client = summarize_client.to_owned();
+        set.spawn(async move { process_file_diff(summarize_client, &file_diff).await });
     }
 
     let mut summary_for_file: HashMap<String, String> = HashMap::with_capacity(set.len());
@@ -150,8 +154,8 @@ Note: OPENAI_API_KEY will be deprecated in a future release. Please use GPTCOMMI
         .join("\n");
 
     let (title, completion) = try_join!(
-        summarize::commit_title(&client, summary_points),
-        summarize::commit_summary(&client, summary_points)
+        summarize_client.commit_title(summary_points),
+        summarize_client.commit_summary(summary_points)
     )?;
 
     // overwrite commit message file

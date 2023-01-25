@@ -9,6 +9,10 @@ use strum_macros::EnumString;
 use std::string::ToString;
 use strum_macros::Display;
 
+use crate::prompt::{
+    PROMPT_TO_SUMMARIZE_DIFF, PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES, PROMPT_TO_SUMMARIZE_DIFF_TITLE,
+};
+
 #[derive(Debug, Clone, Display, Serialize, Default, EnumString)]
 pub enum ModelProvider {
     #[default]
@@ -51,12 +55,6 @@ pub struct OpenAISettings {
     pub model: Option<String>,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, Clone)]
-pub struct Settings {
-    pub model_provider: Option<ModelProvider>,
-    pub openai: Option<OpenAISettings>,
-}
-
 // implement the trait `From<OpenAISettings>` for `ValueKind`
 impl From<OpenAISettings> for config::ValueKind {
     fn from(settings: OpenAISettings) -> Self {
@@ -65,6 +63,40 @@ impl From<OpenAISettings> for config::ValueKind {
         properties.insert("model".to_string(), config::Value::from(settings.model));
         Self::Table(properties)
     }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+pub struct PromptSettings {
+    pub file_diff: Option<String>,
+    pub commit_summary: Option<String>,
+    pub commit_title: Option<String>,
+}
+
+// implement the trait `From<OpenAISettings>` for `ValueKind`
+impl From<PromptSettings> for config::ValueKind {
+    fn from(settings: PromptSettings) -> Self {
+        let mut properties = HashMap::new();
+        properties.insert(
+            "file_diff".to_string(),
+            config::Value::from(settings.file_diff),
+        );
+        properties.insert(
+            "commit_summary".to_string(),
+            config::Value::from(settings.commit_summary),
+        );
+        properties.insert(
+            "commit_title".to_string(),
+            config::Value::from(settings.commit_title),
+        );
+        Self::Table(properties)
+    }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+pub struct Settings {
+    pub model_provider: Option<ModelProvider>,
+    pub openai: Option<OpenAISettings>,
+    pub prompt: Option<PromptSettings>,
 }
 
 pub fn get_user_config_path() -> Option<PathBuf> {
@@ -87,10 +119,18 @@ impl Settings {
             .set_default("model_provider", ModelProvider::OpenAI)?
             .set_default(
                 "openai",
-                OpenAISettings {
+                Some(OpenAISettings {
                     api_key: None,
                     model: Some("text-davinci-003".to_string()),
-                },
+                }),
+            )?
+            .set_default(
+                "prompt",
+                Some(PromptSettings {
+                    file_diff: Some(PROMPT_TO_SUMMARIZE_DIFF.to_string()),
+                    commit_summary: Some(PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES.to_string()),
+                    commit_title: Some(PROMPT_TO_SUMMARIZE_DIFF_TITLE.to_string()),
+                }),
             )?;
 
         if let Some(home_dir) = dirs::home_dir() {

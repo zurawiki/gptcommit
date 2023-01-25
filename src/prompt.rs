@@ -29,7 +29,7 @@ pub fn format_prompt(prompt: &str, map: HashMap<&str, &str>) -> Result<String> {
 
     let mut result = prompt.to_string();
     for (key, value) in map {
-        result = result.replace(&format!("<{}>", key), &value);
+        result = result.replace(&format!("<{}>", key), value);
     }
     Ok(result)
 }
