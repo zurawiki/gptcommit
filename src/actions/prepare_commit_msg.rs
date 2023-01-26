@@ -17,6 +17,7 @@ use tokio::task::JoinSet;
 
 use crate::git;
 
+use crate::help::print_help_openai_api_key;
 use crate::openai::OpenAIClient;
 
 use crate::settings::Settings;
@@ -96,27 +97,7 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
     let client = match OpenAIClient::new(settings.openai.unwrap_or_default()) {
         Ok(client) => client,
         Err(_e) => {
-            println!(
-                "{}",
-            r#"OpenAI API key not found in config or environment.
-
-Configure the OpenAI API key with the command:
-
-    export GPTCOMMIT__OPENAI__API_KEY='sk-...'
-
-Or add the following to your ~/.config/gptcommit/config.toml file:
-```
-model_provider = "openai"
-
-[openai]
-api_key = "sk-..."
-```
-
-Note: OPENAI_API_KEY will be deprecated in a future release. Please use GPTCOMMIT__OPENAI__API_KEY instead, or a config file.
-"#
-            .bold()
-            .yellow(),
-        );
+            print_help_openai_api_key();
             bail!("OpenAI API key not found in config or environment");
         }
     };
