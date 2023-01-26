@@ -33,6 +33,8 @@ fix:
     cargo fix --allow-dirty --allow-staged
     cargo clippy --all-features --all-targets --fix --allow-dirty --allow-staged -- -D warnings --allow deprecated
     cargo fmt --all
+alias f := fix
+
 
 # Bump version. level=major,minor,patch
 version level:
