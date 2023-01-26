@@ -15,6 +15,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 mod actions;
+mod help;
 mod settings;
 
 use log::LevelFilter;

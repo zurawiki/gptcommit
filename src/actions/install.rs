@@ -10,9 +10,13 @@ use std::{fs::Permissions, os::unix::prelude::PermissionsExt};
 use anyhow::{bail, Result};
 use colored::Colorize;
 
-use crate::{cmd::find_executable, settings::Settings};
+use crate::{
+    cmd::find_executable,
+    help::print_help_openai_api_key,
+    settings::{ModelProvider, OpenAISettings, Settings},
+};
 
-pub(crate) async fn main(_settings: Settings) -> Result<()> {
+pub(crate) async fn main(settings: Settings) -> Result<()> {
     println!("{}", "Installing gptcommit hook...".green().bold());
 
     find_executable("git", "To use gptcommit, you must have git on your PATH")?;
@@ -34,12 +38,20 @@ pub(crate) async fn main(_settings: Settings) -> Result<()> {
     fs::set_permissions(&prepare_commit_msg_path, Permissions::from_mode(0o755))?;
 
     println!(
-        "{}\n{}",
+        "{}",
         "gptcommit hook successfully installed!".green().bold(),
-        "Make sure to set OPENAI_API_KEY when using `git commit`."
-            .yellow()
-            .bold()
     );
+
+    if let Settings {
+        model_provider: Some(ModelProvider::OpenAI),
+        openai: Some(OpenAISettings { api_key, .. }),
+        ..
+    } = settings
+    {
+        if api_key.unwrap_or_else(|| "".into()).is_empty() {
+            print_help_openai_api_key();
+        }
+    }
 
     Ok(())
 }
