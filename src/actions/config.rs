@@ -44,7 +44,7 @@ async fn delete(_settings: Settings, full_key: String) -> Result<()> {
     let toml_string = toml::to_string_pretty(settings).unwrap();
     let user_config_path = get_user_config_path().expect("Could not find user config path");
     fs::write(&user_config_path, toml_string)?;
-    println!("Cleared {}", full_key);
+    println!("Cleared {full_key}");
     println!("Config saved to {}", user_config_path.display());
     Ok(())
 }
@@ -54,7 +54,7 @@ async fn set(_settings: Settings, full_key: String, value: String) -> Result<()>
     let toml_string = toml::to_string_pretty(settings).unwrap();
     let user_config_path = get_user_config_path().expect("Could not find user config path");
     fs::write(&user_config_path, toml_string)?;
-    println!("{} = {}", full_key, value);
+    println!("{full_key} = {value}");
     println!("Config saved to {}", user_config_path.display());
     Ok(())
 }
@@ -87,7 +87,7 @@ async fn get(settings: Settings, full_key: String) -> Result<()> {
 
 async fn list(settings: Settings, save: bool) -> Result<()> {
     let toml_string = toml::to_string_pretty(&settings).unwrap();
-    println!("{}", toml_string);
+    println!("{toml_string}");
     if save {
         let user_config_path = get_user_config_path().expect("Could not find user config path");
         fs::write(&user_config_path, toml_string)?;
