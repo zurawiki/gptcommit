@@ -42,10 +42,8 @@ impl OpenAIClient {
         let prompt_token_count = prompt.split_whitespace().filter(|s| !s.is_empty()).count() * 2;
 
         if prompt_token_count > prompt_token_limit {
-            let error_msg = format!(
-                "skipping... token count: {} < {}",
-                prompt_token_count, prompt_token_limit
-            );
+            let error_msg =
+                format!("skipping... token count: {prompt_token_count} < {prompt_token_limit}");
             warn!("{}", error_msg);
             bail!(error_msg)
         }

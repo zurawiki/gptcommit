@@ -130,7 +130,7 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
 
     let summary_points = &summary_for_file
         .iter()
-        .map(|(file_name, completion)| format!("[{}]\n{}", file_name, completion))
+        .map(|(file_name, completion)| format!("[{file_name}]\n{completion}"))
         .collect::<Vec<String>>()
         .join("\n");
 
@@ -142,14 +142,14 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
     // overwrite commit message file
     let mut commit_msg_path = File::create(args.commit_msg_file)?;
 
-    writeln!(commit_msg_path, "{}", title)?;
+    writeln!(commit_msg_path, "{title}")?;
     writeln!(commit_msg_path)?;
-    writeln!(commit_msg_path, "{}", completion)?;
+    writeln!(commit_msg_path, "{completion}")?;
     writeln!(commit_msg_path)?;
     for (file_name, completion) in &summary_for_file {
         if !completion.is_empty() {
-            writeln!(commit_msg_path, "[{}]", file_name)?;
-            writeln!(commit_msg_path, "{}", completion)?;
+            writeln!(commit_msg_path, "[{file_name}]")?;
+            writeln!(commit_msg_path, "{completion}")?;
         }
     }
 

@@ -1,6 +1,6 @@
 /// TODO make trait of string
 /// Split string by prefix, including the prefix in the result.
-pub(crate) fn split_prefix_inclusive<'a, 'b>(string: &'a str, prefix: &'b str) -> Vec<&'a str> {
+pub(crate) fn split_prefix_inclusive<'a>(string: &'a str, prefix: &str) -> Vec<&'a str> {
     let matches = string.match_indices(prefix).map(|(idx, _)| idx);
     let mut start = 0;
     let mut substrings = Vec::new();
