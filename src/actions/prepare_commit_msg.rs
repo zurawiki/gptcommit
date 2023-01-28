@@ -111,12 +111,18 @@ async fn get_commit_message(client: SummarizationClient, diff_as_input: &str) ->
 
     let mut message = String::with_capacity(1024);
 
-    message.push_str(&format!("{title}\n\n{completion}\n\n"));
+    message.push_str(&format!("{title}\n\n{completion}\n"));
     for (file_name, completion) in &summary_for_file {
         if !completion.is_empty() {
-            message.push_str(&format!("[{file_name}]\n{completion}\n\n"));
+            message.push_str(&format!("[{file_name}]\n{completion}\n"));
         }
     }
+
+    // split message into lines and uniquefy lines
+    let mut lines = message.lines().collect::<Vec<&str>>();
+    lines.dedup();
+    let message = lines.join("\n");
+
     Ok(message)
 }
 pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Result<()> {
