@@ -10,8 +10,7 @@ use tokio::try_join;
 use std::collections::HashMap;
 
 use std::fs;
-use std::fs::File;
-use std::io::Write;
+
 use std::path::PathBuf;
 use tokio::task::JoinSet;
 
@@ -81,6 +80,45 @@ pub(crate) struct PrepareCommitMsgArgs {
     git_diff_content: Option<PathBuf>,
 }
 
+async fn get_commit_message(client: SummarizationClient, diff_as_input: &str) -> Result<String> {
+    let file_diffs = util::split_prefix_inclusive(diff_as_input, "\ndiff --git ");
+
+    let mut set = JoinSet::new();
+
+    for file_diff in file_diffs {
+        let file_diff = file_diff.to_owned();
+        let summarize_client = client.to_owned();
+        set.spawn(async move { process_file_diff(summarize_client, &file_diff).await });
+    }
+
+    let mut summary_for_file: HashMap<String, String> = HashMap::with_capacity(set.len());
+    while let Some(res) = set.join_next().await {
+        if let Some((k, v)) = res.unwrap() {
+            summary_for_file.insert(k, v);
+        }
+    }
+
+    let summary_points = &summary_for_file
+        .iter()
+        .map(|(file_name, completion)| format!("[{file_name}]\n{completion}"))
+        .collect::<Vec<String>>()
+        .join("\n");
+
+    let (title, completion) = try_join!(
+        client.commit_title(summary_points),
+        client.commit_summary(summary_points)
+    )?;
+
+    let mut message = String::with_capacity(1024);
+
+    message.push_str(&format!("{title}\n\n{completion}\n\n"));
+    for (file_name, completion) in &summary_for_file {
+        if !completion.is_empty() {
+            message.push_str(&format!("[{file_name}]\n{completion}\n\n"));
+        }
+    }
+    Ok(message)
+}
 pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Result<()> {
     match args.commit_source {
         CommitSource::Empty => {}
@@ -101,7 +139,7 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
             bail!("OpenAI API key not found in config or environment");
         }
     };
-    let summarize_client = SummarizationClient::new(settings.prompt.unwrap(), client)?;
+    let summarization_client = SummarizationClient::new(settings.prompt.unwrap(), client)?;
 
     println!("{}", "🤖 Asking GPT-3 to summarize diffs...".green().bold());
 
@@ -111,47 +149,14 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
         git::get_diffs()?
     };
 
-    let file_diffs = util::split_prefix_inclusive(&output, "\ndiff --git ");
+    let commit_message = get_commit_message(summarization_client, &output).await?;
 
-    let mut set = JoinSet::new();
-
-    for file_diff in file_diffs {
-        let file_diff = file_diff.to_owned();
-        let summarize_client = summarize_client.to_owned();
-        set.spawn(async move { process_file_diff(summarize_client, &file_diff).await });
-    }
-
-    let mut summary_for_file: HashMap<String, String> = HashMap::with_capacity(set.len());
-    while let Some(res) = set.join_next().await {
-        if let Some((k, v)) = res.unwrap() {
-            summary_for_file.insert(k, v);
-        }
-    }
-
-    let summary_points = &summary_for_file
-        .iter()
-        .map(|(file_name, completion)| format!("[{file_name}]\n{completion}"))
-        .collect::<Vec<String>>()
-        .join("\n");
-
-    let (title, completion) = try_join!(
-        summarize_client.commit_title(summary_points),
-        summarize_client.commit_summary(summary_points)
+    // prepend output to commit message
+    let original_message = fs::read_to_string(&args.commit_msg_file)?;
+    fs::write(
+        &args.commit_msg_file,
+        format!("{commit_message}\n{original_message}"),
     )?;
-
-    // overwrite commit message file
-    let mut commit_msg_path = File::create(args.commit_msg_file)?;
-
-    writeln!(commit_msg_path, "{title}")?;
-    writeln!(commit_msg_path)?;
-    writeln!(commit_msg_path, "{completion}")?;
-    writeln!(commit_msg_path)?;
-    for (file_name, completion) in &summary_for_file {
-        if !completion.is_empty() {
-            writeln!(commit_msg_path, "[{file_name}]")?;
-            writeln!(commit_msg_path, "{completion}")?;
-        }
-    }
 
     Ok(())
 }
