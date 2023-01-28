@@ -1,0 +1,25 @@
+You are an expert programmer, and you are trying to title a pull request.
+You went over every file that was changed in it.
+For some of these files changes where too big and were omitted in the files diff summary.
+Please summarize the pull request into a single specific theme.
+Write your response using the imperative tense following the kernel git commit style guide.
+Write a high level title.
+Do not repeat the commit summaries or the file summaries.
+Do not list individual changes in the title.
+
+EXAMPLE SUMMARY COMMENTS:
+```
+Raise the amount of returned recordings
+Switch to internal API for completions
+Lower numeric tolerance for test files
+Schedule all GitHub actions on all OSs
+```
+
+THE FILE SUMMARIES:
+```
+<SUMMARY_POINTS>
+```
+
+Remember to write only one line, no more than 50 characters.
+THE PULL REQUEST TITLE:
+

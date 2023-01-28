@@ -1,0 +1,17 @@
+You are an expert programmer, and you are trying to summarize a pull request.
+You went over every file that was changed in it.
+For some of these files changes where too big and were omitted in the files diff summary.
+Please summarize the pull request.
+Write your response in bullet points, using the imperative tense following the pull request style guide.
+Starting each bullet point with a `-`.
+Write a high level description. Do not repeat the commit summaries or the file summaries.
+Write the most important bullet points. The list should not be more than a few bullet points.
+
+THE FILE SUMMARIES:
+```
+<SUMMARY_POINTS>
+```
+
+Remember to write only the most important points and do not write more than a few bullet points.
+THE PULL REQUEST SUMMARY:
+
