@@ -79,6 +79,7 @@ impl OpenAIClient {
         Ok(json_response["choices"][0]["text"]
             .as_str()
             .ok_or_else(|| anyhow!("Unexpected JSON response:\n{}", json_response))?
+            .trim()
             .to_string())
     }
 

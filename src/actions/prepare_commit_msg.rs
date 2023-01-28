@@ -111,7 +111,7 @@ async fn get_commit_message(client: SummarizationClient, diff_as_input: &str) ->
 
     let mut message = String::with_capacity(1024);
 
-    message.push_str(&format!("{title}\n\n{completion}\n"));
+    message.push_str(&format!("{title}\n\n{completion}\n\n"));
     for (file_name, completion) in &summary_for_file {
         if !completion.is_empty() {
             message.push_str(&format!("[{file_name}]\n{completion}\n"));
