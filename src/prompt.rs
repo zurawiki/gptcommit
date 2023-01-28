@@ -34,6 +34,9 @@ pub fn format_prompt(prompt: &str, map: HashMap<&str, &str>) -> Result<String> {
     Ok(result)
 }
 
-pub static PROMPT_TO_SUMMARIZE_DIFF: &str = include_str!("../prompts/summarize_file_diff.prompt.txt");
-pub static PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES: &str = include_str!("../prompts/summarize_commit.prompt.txt");
-pub static PROMPT_TO_SUMMARIZE_DIFF_TITLE: &str = include_str!("../prompts/title_commit.prompt.txt");
+pub static PROMPT_TO_SUMMARIZE_DIFF: &str =
+    include_str!("../prompts/summarize_file_diff.prompt.txt");
+pub static PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES: &str =
+    include_str!("../prompts/summarize_commit.prompt.txt");
+pub static PROMPT_TO_SUMMARIZE_DIFF_TITLE: &str =
+    include_str!("../prompts/title_commit.prompt.txt");

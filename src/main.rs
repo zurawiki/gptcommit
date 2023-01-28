@@ -37,6 +37,8 @@ struct Cli {
 enum Action {
     /// Install the git hook
     Install,
+    /// Uninstall the git hook
+    Uninstall,
     /// Read and modify settings
     Config(ConfigArgs),
     /// Run on the prepare-commit-msg hook
@@ -63,6 +65,7 @@ async fn main() -> Result<()> {
     match cli.action {
         Action::Config(cli) => actions::config::main(settings, cli).await,
         Action::Install => actions::install::main(settings).await,
+        Action::Uninstall => actions::uninstall::main(settings).await,
         Action::PrepareCommitMsg(cli) => actions::prepare_commit_msg::main(settings, cli).await,
     }
 }
