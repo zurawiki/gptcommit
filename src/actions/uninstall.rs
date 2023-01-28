@@ -19,12 +19,26 @@ pub(crate) async fn main(_settings: Settings) -> Result<()> {
     );
     let prepare_commit_msg_path = hooks_path.join("prepare-commit-msg");
     info!("Removing file at {}", prepare_commit_msg_path.display());
-    fs::remove_file(&prepare_commit_msg_path)?;
 
-    println!(
-        "{}",
-        "gptcommit hook successfully uninstalled!".green().bold(),
-    );
+    if prepare_commit_msg_path.exists() {
+        let file_contents = fs::read_to_string(&prepare_commit_msg_path)?;
+        if file_contents == include_str!("../../prepare-commit-msg") {
+            fs::remove_file(&prepare_commit_msg_path)?;
+            println!(
+                "{}",
+                "gptcommit hook successfully uninstalled!".green().bold(),
+            );
+        } else {
+            warn!(
+                "{} is not gptcommit's prepare-commit-msg hook. Skipping uninstall.",
+                prepare_commit_msg_path.display()
+            );
+            warn!(
+                "Manually delete this file with\n  rm -rf {}",
+                prepare_commit_msg_path.display()
+            );
+        }
+    }
 
     Ok(())
 }
