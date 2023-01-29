@@ -42,8 +42,6 @@ To use `gptcommit`, simply run `git commit` as you normally would. The hook will
 
 Note: By default, `gptcommit` uses the GPT-3 model. Please ensure you have sufficient credits in your OpenAI account to use it.
 
-**n.b.** If your OpenAI API key has changed, simply re-run `gptcommit install`.
-
 ## Features
 
 `gptcommit` supports a number of configuration options that are read from `$HOME/.config/gptcommit/config.toml`.
