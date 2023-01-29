@@ -87,7 +87,7 @@ async fn get_commit_message(client: SummarizationClient, diff_as_input: &str) ->
 
     for file_diff in file_diffs {
         let file_diff = file_diff.to_owned();
-        let summarize_client = client.to_owned();
+        let summarize_client = client.clone();
         set.spawn(async move { process_file_diff(summarize_client, &file_diff).await });
     }
 
@@ -158,7 +158,11 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
     let commit_message = get_commit_message(summarization_client, &output).await?;
 
     // prepend output to commit message
-    let mut original_message = fs::read_to_string(&args.commit_msg_file)?;
+    let mut original_message: String = if args.commit_msg_file.is_file() {
+        fs::read_to_string(&args.commit_msg_file)?
+    } else {
+        String::new()
+    };
     if settings.allow_amend.unwrap_or(false) {
         original_message = original_message
             .lines()
