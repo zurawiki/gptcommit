@@ -126,9 +126,9 @@ async fn get_commit_message(client: SummarizationClient, diff_as_input: &str) ->
     Ok(message)
 }
 pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Result<()> {
-    match args.commit_source {
-        CommitSource::Empty => {}
-        CommitSource::Commit => {
+    match (args.commit_source, settings.allow_amend) {
+        (CommitSource::Empty, _) | (CommitSource::Commit, Some(true)) => {}
+        (CommitSource::Commit, _) => {
             println!("🤖 Skipping gptcommit because commit is being amended");
             return Ok(());
         }
@@ -158,7 +158,15 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
     let commit_message = get_commit_message(summarization_client, &output).await?;
 
     // prepend output to commit message
-    let original_message = fs::read_to_string(&args.commit_msg_file)?;
+    let mut original_message = fs::read_to_string(&args.commit_msg_file)?;
+    if settings.allow_amend.unwrap_or(false) {
+        original_message = original_message
+            .lines()
+            .map(|l| format!("# {l}"))
+            .collect::<Vec<String>>()
+            .join("\n");
+        original_message = format!("### BEGIN GIT COMMIT BEFORE AMEND\n{original_message}\n### END GIT COMMIT BEFORE AMEND\n");
+    }
     fs::write(
         &args.commit_msg_file,
         format!("{commit_message}\n{original_message}"),
