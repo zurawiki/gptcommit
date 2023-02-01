@@ -22,6 +22,7 @@ use crate::openai::OpenAIClient;
 use crate::settings::Settings;
 use crate::summarize::SummarizationClient;
 use crate::util;
+use crate::util::SplitPrefixInclusive;
 
 /// Splits the contents of a git diff by file.
 ///
@@ -81,7 +82,7 @@ pub(crate) struct PrepareCommitMsgArgs {
 }
 
 async fn get_commit_message(client: SummarizationClient, diff_as_input: &str) -> Result<String> {
-    let file_diffs = util::split_prefix_inclusive(diff_as_input, "\ndiff --git ");
+    let file_diffs = diff_as_input.split_prefix_inclusive("\ndiff --git ");
 
     let mut set = JoinSet::new();
 

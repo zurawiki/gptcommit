@@ -1,18 +1,23 @@
-/// TODO make trait of string
-/// Split string by prefix, including the prefix in the result.
-pub(crate) fn split_prefix_inclusive<'a>(string: &'a str, prefix: &str) -> Vec<&'a str> {
-    let matches = string.match_indices(prefix).map(|(idx, _)| idx);
-    let mut start = 0;
-    let mut substrings = Vec::new();
-    for idx in matches {
-        if idx != start {
-            substrings.push(&string[start..idx]);
-            start = idx;
-        }
-    }
-    substrings.push(&string[start..]);
+pub(crate) trait SplitPrefixInclusive {
+    fn split_prefix_inclusive<'a>(&'a self, prefix: &str) -> Vec<&'a str>;
+}
 
-    substrings
+impl SplitPrefixInclusive for str {
+    /// Split string by prefix, including the prefix in the result.
+    fn split_prefix_inclusive<'a>(&'a self, prefix: &str) -> Vec<&'a str> {
+        let matches = self.match_indices(prefix).map(|(idx, _)| idx);
+        let mut start = 0;
+        let mut substrings = Vec::new();
+        for idx in matches {
+            if idx != start {
+                substrings.push(&self[start..idx]);
+                start = idx;
+            }
+        }
+        substrings.push(&self[start..]);
+
+        substrings
+    }
 }
 
 /// Finds the file name from a diff. The diff is expected to be of the form
@@ -33,16 +38,16 @@ mod tests {
     fn test_split_prefix_inclusive() {
         let string = include_str!("../tests/data/example_1.diff");
         let pattern = "diff --git ";
-        assert_eq!(split_prefix_inclusive(string, pattern).len(), 5);
+        assert_eq!(string.split_prefix_inclusive(pattern).len(), 5);
     }
 
     #[test]
     fn test_basic_split_prefix_inclusive() {
         let string = "x111x222x333";
         let pattern = "x";
-        assert_eq!(split_prefix_inclusive(string, pattern).len(), 3);
+        assert_eq!(string.split_prefix_inclusive(pattern).len(), 3);
         assert_eq!(
-            split_prefix_inclusive(string, pattern),
+            string.split_prefix_inclusive(pattern),
             &["x111", "x222", "x333"]
         );
     }
@@ -51,9 +56,9 @@ mod tests {
     fn test_basic_split_prefix_inclusive_2() {
         let string = "x111\nx222\nx333";
         let pattern = "\nx";
-        assert_eq!(split_prefix_inclusive(string, pattern).len(), 3);
+        assert_eq!(string.split_prefix_inclusive(pattern).len(), 3);
         assert_eq!(
-            split_prefix_inclusive(string, pattern),
+            string.split_prefix_inclusive(pattern),
             &["x111", "\nx222", "\nx333"]
         );
     }
