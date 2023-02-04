@@ -74,6 +74,37 @@ You can also config this setting via the `GPTCOMMIT__OPENAI__MODEL`.
 
 For a list of public OpenAI models, checkout the [OpenAI docs](https://beta.openai.com/docs/models/overview). You can also bring in your own fine-tuned model.
 
+### Allow re-summarizing when amending commits
+
+```sh
+gptcommit config set allow-amend true
+```
+
+## Common Issues / FAQs
+
+### How can I reduce my OpenAI usage bill?
+
+In the current design, gptcommit issues N+2 prompts, where N is the number of modified files with diffs under the max_token_limit. The other prompts are the title and summary.
+
+OpenAI Completions are billed by "tokens" that are both sent and generated. Pricing per token depends on the model used. The number of tokens generated are generally predictable (as a commit message is usually only so big) but gptcommit could be sending over a lot of tokens in the form of diff data.
+
+Today, I see two low-hanging solutions for reducing cost:
+
+- Switch to a different model using the openai.model configuration option
+- Reduce the side of prompts and diff data sent to OpenAI
+
+OpenAI's pricing page can be found at
+<https://openai.com/api/pricing/#faq-completions-pricing>
+
+### The githook is not running when I commit
+
+By default, the githook is only run for new commits.
+If a template is set or the commit is being amended, the githook will skip by default.
+
+Because the githook detected the user is supplying their own template, we make sure not to overwrite it with GPT. You can remove the commit template by making sure `git config --local commit.template` is blank.
+
+You can allow gptcommit to summarize amended commits with the following configuration above.
+
 ## Encountered any bugs?
 
 If you encounter any bugs or have any suggestions for improvements, please open an issue on the repository.
