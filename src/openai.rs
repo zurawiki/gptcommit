@@ -4,6 +4,7 @@ use anyhow::{anyhow, bail, Result};
 
 use reqwest::{Client, ClientBuilder};
 use serde_json::{json, Value};
+use tiktoken_rs::tiktoken::{p50k_base, CoreBPE};
 
 use crate::settings::OpenAISettings;
 
@@ -38,10 +39,14 @@ impl OpenAIClient {
     /// It takes a prompt as input, and returns the completion.
     pub(crate) async fn completions(&self, prompt: &str) -> Result<String> {
         let prompt_token_limit = self.get_prompt_token_limit_for_model();
-        // TODO use real tokenizer. Right now we assume, 1 word = 2 tokens
-        let prompt_token_count = prompt.split_whitespace().filter(|s| !s.is_empty()).count() * 2;
+        lazy_static! {
+            static ref BPE_TOKENIZER: CoreBPE = p50k_base().unwrap();
+        }
+        let output_length = 100;
 
-        if prompt_token_count > prompt_token_limit {
+        let tokens = BPE_TOKENIZER.encode_with_special_tokens(prompt);
+        let prompt_token_count = tokens.len();
+        if prompt_token_count + output_length > prompt_token_limit {
             let error_msg =
                 format!("skipping... token count: {prompt_token_count} < {prompt_token_limit}");
             warn!("{}", error_msg);
@@ -52,7 +57,7 @@ impl OpenAIClient {
             "model": self.model,
             "prompt": prompt,
             "temperature": 0.5,
-            "max_tokens": 100,
+            "max_tokens": output_length,
             "top_p": 1,
             "frequency_penalty": 0,
             "presence_penalty": 0
