@@ -48,6 +48,8 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - run: just ${{ matrix.just_goals || 'build test' }}
+              env:
+                  GPTCOMMIT__OPENAI__API_KEY: ${{ secrets.GPTCOMMIT__OPENAI__API_KEY }}
 
     lint:
         runs-on: ubuntu-latest
