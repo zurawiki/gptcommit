@@ -34,7 +34,7 @@ impl SummarizationClient {
 
         let prompt = format_prompt(
             &self.prompt_file_diff,
-            HashMap::from([("FILE_DIFF", file_diff)]),
+            HashMap::from([("file_diff", file_diff)]),
         )?;
 
         let completion = self.client.completions(&prompt).await;
@@ -44,7 +44,7 @@ impl SummarizationClient {
     pub(crate) async fn commit_summary(&self, summary_points: &str) -> Result<String> {
         let prompt = format_prompt(
             &self.prompt_commit_summary,
-            HashMap::from([("SUMMARY_POINTS", summary_points)]),
+            HashMap::from([("summary_points", summary_points)]),
         )?;
 
         let completion = self.client.completions(&prompt).await;
@@ -54,7 +54,7 @@ impl SummarizationClient {
     pub(crate) async fn commit_title(&self, summary_points: &str) -> Result<String> {
         let prompt = format_prompt(
             &self.prompt_commit_title,
-            HashMap::from([("SUMMARY_POINTS", summary_points)]),
+            HashMap::from([("summary_points", summary_points)]),
         )?;
 
         let completion = self.client.completions(&prompt).await;

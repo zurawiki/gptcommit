@@ -9,7 +9,7 @@ Write the most important bullet points. The list should not be more than a few b
 
 THE FILE SUMMARIES:
 ```
-<SUMMARY_POINTS>
+{{ summary_points }}
 ```
 
 Remember to write only the most important points and do not write more than a few bullet points.
