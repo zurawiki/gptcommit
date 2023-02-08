@@ -41,7 +41,7 @@ It is given only as an example of appropriate comments.
 
 THE GIT DIFF TO BE SUMMARIZED:
 ```
-<FILE_DIFF>
+{{ file_diff }}
 ```
 
 THE SUMMARY:

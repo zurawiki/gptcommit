@@ -2,6 +2,7 @@
 set -eu
 
 (
+    rm -rf test_dir_foo4
     mkdir test_dir_foo4
     cd test_dir_foo4
     git init
@@ -17,4 +18,4 @@ set -eu
 
     cat $TEMPFILE
 )
-rm -rf test_dir_foo4 
+rm -rf test_dir_foo4
