@@ -11,8 +11,12 @@ use strum_macros::EnumString;
 use std::string::ToString;
 use strum_macros::Display;
 
-use crate::prompt::{
-    PROMPT_TO_SUMMARIZE_DIFF, PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES, PROMPT_TO_SUMMARIZE_DIFF_TITLE,
+use crate::{
+    git::get_hooks_path,
+    prompt::{
+        PROMPT_TO_SUMMARIZE_DIFF, PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES,
+        PROMPT_TO_SUMMARIZE_DIFF_TITLE,
+    },
 };
 
 #[derive(Debug, Clone, Display, Serialize, Default, EnumString)]
@@ -157,6 +161,13 @@ impl Settings {
             } else {
                 debug!("Config dir at {} is not a dir", config_dir.display());
             }
+        }
+
+        // Add repo-local config
+        // Find git repo
+        if let Ok(hooks_path) = get_hooks_path() {
+            let config_path = hooks_path.join("../gptcommit.toml");
+            settings = settings.add_source(File::from(config_path).required(false));
         }
 
         // Add in settings from the environment (with a prefix of GPTCOMMIT)

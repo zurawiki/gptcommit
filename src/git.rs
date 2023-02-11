@@ -9,7 +9,6 @@ use std::{fs::Permissions, os::unix::prelude::PermissionsExt};
 
 use crate::cmd;
 use anyhow::{bail, Result};
-use colored::Colorize;
 
 pub(crate) fn get_diffs() -> Result<String> {
     let output = cmd::run_command("git", &["diff", "--staged", "-w"])?;
@@ -38,10 +37,5 @@ pub(crate) fn get_hooks_path() -> Result<PathBuf> {
     fs::set_permissions(&rel_hooks_path, Permissions::from_mode(0o755))?;
     // turn relative path into absolute path
     let hooks_path = std::fs::canonicalize(rel_hooks_path)?;
-    println!(
-        "Installing git hook to {}",
-        hooks_path.display().to_string().bold()
-    );
-
     Ok(hooks_path)
 }
