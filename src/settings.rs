@@ -192,6 +192,21 @@ impl Settings {
     }
 }
 
+pub fn get_local_config_path() -> Option<PathBuf> {
+    if let Ok(config_dir) = get_hooks_path() {
+        if !config_dir.is_dir() {
+            fs::create_dir_all(&config_dir).ok()?;
+        }
+        let config_path = config_dir.join("../gptcommit.toml");
+        if !config_path.exists() {
+            fs::write(&config_path, "").ok()?;
+        }
+        return Some(config_path);
+    }
+
+    None
+}
+
 pub fn get_user_config_path() -> Option<PathBuf> {
     if let Some(home_dir) = dirs::home_dir() {
         let config_dir = home_dir.join(".config").join(APP_NAME);

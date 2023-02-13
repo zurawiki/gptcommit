@@ -22,7 +22,7 @@ install:
     cargo install --path .
 
 e2e: install
-    sh -eux -c 'for i in ./e2e/test_*.sh ; do sh -x $i ; done'
+    sh -eux -c 'for i in ./e2e/test_*.sh ; do sh -x "$i" ; done'
 
 test *args: e2e
     cargo test
