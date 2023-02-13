@@ -1,9 +1,9 @@
-use std::{collections::VecDeque, fs};
+use std::{collections::VecDeque, fs, path::PathBuf};
 
 use clap::{Args, Subcommand};
 use toml::Value;
 
-use crate::settings::{get_user_config_path, Settings};
+use crate::settings::{get_local_config_path, get_user_config_path, Settings};
 use anyhow::{bail, Result};
 
 #[derive(Subcommand, Debug)]
@@ -17,9 +17,20 @@ pub(crate) enum ConfigAction {
     /// Read config value
     Get { key: String },
     /// Set config value
-    Set { key: String, value: String },
+    Set {
+        key: String,
+        value: String,
+        /// if set, modifies the local config. Default behavior modifies global config
+        #[clap(long)]
+        local: bool,
+    },
     /// Clear config value
-    Delete { key: String },
+    Delete {
+        key: String,
+        /// if set, modifies the local config. Default behavior modifies global config
+        #[clap(long)]
+        local: bool,
+    },
 }
 
 #[derive(Args, Debug)]
@@ -34,28 +45,36 @@ pub(crate) async fn main(settings: Settings, args: ConfigArgs) -> Result<()> {
     match args.action {
         ConfigAction::List { save } => list(settings, save).await,
         ConfigAction::Get { key } => get(settings, key).await,
-        ConfigAction::Set { key, value } => set(settings, key, value).await,
-        ConfigAction::Delete { key } => delete(settings, key).await,
+        ConfigAction::Set { key, value, local } => set(settings, key, value, local).await,
+        ConfigAction::Delete { key, local } => delete(settings, key, local).await,
     }
 }
 
-async fn delete(_settings: Settings, full_key: String) -> Result<()> {
+async fn delete(_settings: Settings, full_key: String, local: bool) -> Result<()> {
     let settings = &Settings::from_clear(&full_key)?;
     let toml_string = toml::to_string_pretty(settings).unwrap();
-    let user_config_path = get_user_config_path().expect("Could not find user config path");
-    fs::write(&user_config_path, toml_string)?;
+    let config_path: PathBuf = if local {
+        get_local_config_path().expect("Could not find repo-local config path")
+    } else {
+        get_user_config_path().expect("Could not find user config path")
+    };
+    fs::write(&config_path, toml_string)?;
     println!("Cleared {full_key}");
-    println!("Config saved to {}", user_config_path.display());
+    println!("Config saved to {}", config_path.display());
     Ok(())
 }
 
-async fn set(_settings: Settings, full_key: String, value: String) -> Result<()> {
+async fn set(_settings: Settings, full_key: String, value: String, local: bool) -> Result<()> {
     let settings = &Settings::from_set_override(&full_key, &value)?;
     let toml_string = toml::to_string_pretty(settings).unwrap();
-    let user_config_path = get_user_config_path().expect("Could not find user config path");
-    fs::write(&user_config_path, toml_string)?;
+    let config_path: PathBuf = if local {
+        get_local_config_path().expect("Could not find repo-local config path")
+    } else {
+        get_user_config_path().expect("Could not find user config path")
+    };
+    fs::write(&config_path, toml_string)?;
     println!("{full_key} = {value}");
-    println!("Config saved to {}", user_config_path.display());
+    println!("Config saved to {}", config_path.display());
     Ok(())
 }
 
