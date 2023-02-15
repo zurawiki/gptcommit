@@ -18,7 +18,7 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.69"
-clap = { version = "4.1.4", features = ["derive"] }
+clap = { version = "4.1.6", features = ["derive"] }
 colored = "2.0.0"
 config = { version = "0.13.3", features = ["toml"] }
 dirs = "4.0.0"
