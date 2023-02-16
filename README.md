@@ -81,6 +81,12 @@ You can also config this setting via the `GPTCOMMIT__OPENAI__MODEL`.
 
 For a list of public OpenAI models, checkout the [OpenAI docs](https://beta.openai.com/docs/models/overview). You can also bring in your own fine-tuned model.
 
+### Set summarizing language
+
+```sh
+gptcommit config set prompt.lang english
+```
+
 ### Allow re-summarizing when amending commits
 
 ```sh
