@@ -3,10 +3,10 @@ use tera::{Context, Error};
 use std::collections::HashMap;
 use tera::Tera;
 
-pub fn format_prompt(prompt: &str, map: HashMap<&str, &str>) -> Result<String, Error> {
+pub fn format_prompt(prompt: &str, lang: &str, map: HashMap<&str, &str>) -> Result<String, Error> {
     let context = Context::from_serialize(map)?;
-
-    Tera::one_off(prompt, &context, false)
+    let new_prompt = format!("REMEMBER, USE {} AS THE ANSWER.\n{}", lang.to_uppercase(), prompt);
+    Tera::one_off(&new_prompt, &context, false)
 }
 
 pub static PROMPT_TO_SUMMARIZE_DIFF: &str = include_str!("../prompts/summarize_file_diff.tera");

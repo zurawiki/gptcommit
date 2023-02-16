@@ -79,6 +79,7 @@ pub(crate) struct PromptSettings {
     pub file_diff: Option<String>,
     pub commit_summary: Option<String>,
     pub commit_title: Option<String>,
+    pub lang: Option<String>,
 }
 
 // implement the trait `From<OpenAISettings>` for `ValueKind`
@@ -96,6 +97,10 @@ impl From<PromptSettings> for config::ValueKind {
         properties.insert(
             "commit_title".to_string(),
             config::Value::from(settings.commit_title),
+        );
+        properties.insert(
+            "lang".to_string(),
+            config::Value::from(settings.lang),
         );
         Self::Table(properties)
     }
@@ -144,6 +149,7 @@ impl Settings {
                     file_diff: Some(PROMPT_TO_SUMMARIZE_DIFF.to_string()),
                     commit_summary: Some(PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES.to_string()),
                     commit_title: Some(PROMPT_TO_SUMMARIZE_DIFF_TITLE.to_string()),
+                    lang: Some("ENGLISH".to_string()),
                 }),
             )?;
 

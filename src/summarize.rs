@@ -14,6 +14,8 @@ pub(crate) struct SummarizationClient {
     prompt_file_diff: String,
     prompt_commit_summary: String,
     prompt_commit_title: String,
+
+    prompt_lang: String,
 }
 
 impl SummarizationClient {
@@ -21,12 +23,14 @@ impl SummarizationClient {
         let prompt_file_diff = settings.file_diff.unwrap_or_default();
         let prompt_commit_summary = settings.commit_summary.unwrap_or_default();
         let prompt_commit_title = settings.commit_title.unwrap_or_default();
+        let prompt_lang = settings.lang.unwrap_or_default();
 
         Ok(Self {
             client: client.into(),
             prompt_file_diff,
             prompt_commit_summary,
             prompt_commit_title,
+            prompt_lang,
         })
     }
 
@@ -99,6 +103,7 @@ impl SummarizationClient {
 
         let prompt = format_prompt(
             &self.prompt_file_diff,
+            &self.prompt_lang,
             HashMap::from([("file_diff", file_diff)]),
         )?;
 
@@ -109,6 +114,7 @@ impl SummarizationClient {
     pub(crate) async fn commit_summary(&self, summary_points: &str) -> Result<String> {
         let prompt = format_prompt(
             &self.prompt_commit_summary,
+            &self.prompt_lang,
             HashMap::from([("summary_points", summary_points)]),
         )?;
 
@@ -119,6 +125,7 @@ impl SummarizationClient {
     pub(crate) async fn commit_title(&self, summary_points: &str) -> Result<String> {
         let prompt = format_prompt(
             &self.prompt_commit_title,
+            &self.prompt_lang,
             HashMap::from([("summary_points", summary_points)]),
         )?;
 
