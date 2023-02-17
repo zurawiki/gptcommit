@@ -197,19 +197,10 @@ pub fn get_local_config_path() -> Option<PathBuf> {
         if !config_dir.is_dir() {
             fs::create_dir_all(&config_dir).ok()?;
         }
-<<<<<<< HEAD
-        let config_path = config_dir
-            .parent()
-            .unwrap_or_else(|| &config_dir)
-            .join("gptcommit.toml");
-||||||| parent of 6b04239 (Simplify path)
-        let config_path = config_dir.join("../gptcommit.toml");
-=======
         let config_path = config_dir
             .parent()
             .unwrap_or(&config_dir)
             .join("gptcommit.toml");
->>>>>>> 6b04239 (Simplify path)
         if !config_path.exists() {
             fs::write(&config_path, "").ok()?;
         }
