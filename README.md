@@ -105,9 +105,17 @@ Because the githook detected the user is supplying their own template, we make s
 
 You can allow gptcommit to summarize amended commits with the following configuration above.
 
+## Derived Works
+
+All of these awesome projects are built using  `gptcommit`.
+
+- A VSCode extension you can
+  [install here](https://marketplace.visualstudio.com/items?itemName=pwwang.gptcommit) | [GitHub](https://github.com/pwwangvscode-gptcommit)
+
 ## Encountered any bugs?
 
 If you encounter any bugs or have any suggestions for improvements, please open an issue on the repository.
+
 
 ## License
 
