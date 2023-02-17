@@ -48,6 +48,7 @@ Note: By default, `gptcommit` uses the GPT-3 model. Please ensure you have suffi
 Configs are applied in the following order:
 
 - User settings as read from `$HOME/.config/gptcommit/config.toml`.
+- The settings as read from the repo clone at `$GIT_ROOT/.git/gptcommit.toml`.
 - Environment variables starting with `GPTCOMMIT__*`.
 
 ### Set your OpenAI API key
@@ -56,6 +57,12 @@ Persist your OpenAI key
 
 ```sh
 gptcommit config set openai.api_key sk-...
+```
+
+or set it just for you local repo:
+
+```sh
+gptcommit config set --local openai.api_key sk-...
 ```
 
 You can also config this setting via the `GPTCOMMIT__OPENAI__API_KEY`.
