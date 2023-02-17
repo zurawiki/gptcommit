@@ -5,7 +5,7 @@ use tera::Tera;
 
 pub fn format_prompt(prompt: &str, lang: &str, map: HashMap<&str, &str>) -> Result<String, Error> {
     let context = Context::from_serialize(map)?;
-    let new_prompt = format!("REMEMBER, USE {} AS THE ANSWER.\n{}", lang.to_uppercase(), prompt);
+    let new_prompt = format!("REMEMBER, ANSWER IN {}.\n{}", lang.to_uppercase(), prompt);
     Tera::one_off(&new_prompt, &context, false)
 }
 
