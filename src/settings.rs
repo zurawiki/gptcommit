@@ -19,6 +19,15 @@ use crate::{
     },
 };
 
+pub fn get_langs() -> HashMap<String, String>{
+    let mut langs = HashMap::new();
+    langs.insert("en".to_string(), "English".to_string());
+    langs.insert("zh-cn".to_string(), "Simplified Chinese".to_string());
+    langs.insert("zh-tw".to_string(), "Traditional Chinese".to_string());
+    langs.insert("ja".to_string(), "Japanese".to_string());
+    langs
+}
+
 #[derive(Debug, Clone, Display, Serialize, Default, EnumString)]
 pub(crate) enum ModelProvider {
     #[default]
@@ -122,6 +131,12 @@ impl Settings {
     }
 
     pub fn from_set_override(key: &str, value: &str) -> Result<Self, ConfigError> {
+        if key == "prompt.lang" {
+            let langs = get_langs();
+            if !langs.contains_key(value) {
+                return Err(ConfigError::Message(format!("lang must be one of {:?}", langs.keys())));
+            }
+        }
         let mut settings = Self::get_config_builder()?;
         settings = settings.set_override(key, value)?;
         settings.build()?.try_deserialize()
@@ -149,7 +164,7 @@ impl Settings {
                     file_diff: Some(PROMPT_TO_SUMMARIZE_DIFF.to_string()),
                     commit_summary: Some(PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES.to_string()),
                     commit_title: Some(PROMPT_TO_SUMMARIZE_DIFF_TITLE.to_string()),
-                    lang: Some("ENGLISH".to_string()),
+                    lang: Some("en".to_string()),
                 }),
             )?;
 

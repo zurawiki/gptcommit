@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::llms::llm_client::LlmClient;
 use crate::util;
-use crate::{prompt::format_prompt, settings::PromptSettings};
+use crate::{prompt::format_prompt, settings::PromptSettings, settings::get_langs};
 use anyhow::Result;
 use tokio::task::JoinSet;
 use tokio::try_join;
@@ -19,10 +19,18 @@ pub(crate) struct SummarizationClient {
 
 impl SummarizationClient {
     pub(crate) fn new(settings: PromptSettings, client: Box<dyn LlmClient>) -> Result<Self> {
+        let langs = get_langs();
         let prompt_file_diff = settings.file_diff.unwrap_or_default();
         let prompt_commit_summary = settings.commit_summary.unwrap_or_default();
         let prompt_commit_title = settings.commit_title.unwrap_or_default();
-        let prompt_lang = settings.lang.unwrap_or_default();
+        let prompt_lang =   if let Some(lang) = settings.lang {
+            if !langs.contains_key(&lang.to_lowercase()) {
+                panic!("lang must be one of {:?}", langs.keys());
+            }
+            langs.get(&lang.to_lowercase()).unwrap().to_string()
+        } else {
+            langs.get("en").unwrap().to_string()
+        };
 
         Ok(Self {
             client: client.into(),
