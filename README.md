@@ -83,9 +83,19 @@ For a list of public OpenAI models, checkout the [OpenAI docs](https://beta.open
 
 ### Set summarizing language
 
+`gptcommit` uses English by default. The language can be configured to use other languages as below
+
 ```sh
-gptcommit config set prompt.lang english
+gptcommit config set prompt.lang zh-cn
 ```
+
+Now, supported languages are:
+|shortcut|language|
+|-|-|
+|`en`|English|
+|`zh-cn`|简体中文|
+|`zh-tw`|繁體中文|
+|`ja`|日本語|
 
 ### Allow re-summarizing when amending commits
 
