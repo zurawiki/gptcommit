@@ -14,7 +14,6 @@ pub(crate) struct SummarizationClient {
     prompt_file_diff: String,
     prompt_commit_summary: String,
     prompt_commit_title: String,
-
     prompt_lang: String,
 }
 
@@ -103,8 +102,7 @@ impl SummarizationClient {
 
         let prompt = format_prompt(
             &self.prompt_file_diff,
-            &self.prompt_lang,
-            HashMap::from([("file_diff", file_diff)]),
+            HashMap::from([("file_diff", file_diff), ("ansewe_langurage", &self.prompt_lang)]),
         )?;
 
         let completion = self.client.completions(&prompt).await;
@@ -114,8 +112,7 @@ impl SummarizationClient {
     pub(crate) async fn commit_summary(&self, summary_points: &str) -> Result<String> {
         let prompt = format_prompt(
             &self.prompt_commit_summary,
-            &self.prompt_lang,
-            HashMap::from([("summary_points", summary_points)]),
+            HashMap::from([("summary_points", summary_points), ("ansewe_langurage", &self.prompt_lang)]),
         )?;
 
         let completion = self.client.completions(&prompt).await;
@@ -125,8 +122,7 @@ impl SummarizationClient {
     pub(crate) async fn commit_title(&self, summary_points: &str) -> Result<String> {
         let prompt = format_prompt(
             &self.prompt_commit_title,
-            &self.prompt_lang,
-            HashMap::from([("summary_points", summary_points)]),
+            HashMap::from([("summary_points", summary_points), ("ansewe_langurage", &self.prompt_lang)]),
         )?;
 
         let completion = self.client.completions(&prompt).await;
