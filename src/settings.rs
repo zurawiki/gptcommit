@@ -20,11 +20,14 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Display, Serialize, Default, EnumString)]
-pub enum ModelProvider {
+pub(crate) enum ModelProvider {
     #[default]
     #[strum(serialize = "openai")]
     #[serde(rename = "openai")]
     OpenAI,
+    #[strum(serialize = "tester-foobar")]
+    #[serde(rename = "tester-foobar")]
+    TesterFoobar,
 }
 
 // implement the trait `From<ModelProvider>` for `ValueKind`
@@ -56,7 +59,7 @@ impl<'de> serde::Deserialize<'de> for ModelProvider {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
-pub struct OpenAISettings {
+pub(crate) struct OpenAISettings {
     pub api_key: Option<String>,
     pub model: Option<String>,
 }
@@ -72,7 +75,7 @@ impl From<OpenAISettings> for config::ValueKind {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
-pub struct PromptSettings {
+pub(crate) struct PromptSettings {
     pub file_diff: Option<String>,
     pub commit_summary: Option<String>,
     pub commit_title: Option<String>,
@@ -99,7 +102,7 @@ impl From<PromptSettings> for config::ValueKind {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
-pub struct Settings {
+pub(crate) struct Settings {
     pub model_provider: Option<ModelProvider>,
     pub openai: Option<OpenAISettings>,
     pub prompt: Option<PromptSettings>,

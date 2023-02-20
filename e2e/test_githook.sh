@@ -11,7 +11,7 @@ export TEMPDIR=$(mktemp -d)
     export TEMPFILE=$(mktemp)
     echo "foo" > $TEMPFILE
 
-    GPTCOMMIT__OPENAI__MODEL="text-ada-001" \
+    GPTCOMMIT__MODEL_PROVIDER="tester-foobar" \
     gptcommit prepare-commit-msg \
       --git-diff-content "${DIFF_CONTENT_PATH}" \
       --commit-msg-file "${TEMPFILE}" \
