@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{openai::OpenAIClient, prompt::format_prompt, settings::PromptSettings};
+use crate::{llms::openai::OpenAIClient, prompt::format_prompt, settings::PromptSettings};
 use anyhow::Result;
 
 #[derive(Clone, Debug)]

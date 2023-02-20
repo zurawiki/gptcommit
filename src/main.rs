@@ -6,7 +6,6 @@ extern crate lazy_static;
 extern crate log;
 mod cmd;
 mod git;
-mod openai;
 mod prompt;
 mod summarize;
 mod util;
@@ -16,6 +15,7 @@ use clap::{Parser, Subcommand};
 
 mod actions;
 mod help;
+mod llms;
 mod settings;
 
 use log::LevelFilter;
