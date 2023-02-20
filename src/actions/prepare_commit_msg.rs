@@ -17,6 +17,7 @@ use tokio::task::JoinSet;
 use crate::git;
 
 use crate::help::print_help_openai_api_key;
+use crate::llms::base_llm::LlmClient;
 use crate::llms::openai::OpenAIClient;
 
 use crate::settings::Settings;
@@ -32,8 +33,8 @@ use crate::util::SplitPrefixInclusive;
 /// The function assumes that the file_diff input is well-formed
 /// according to the Diff format described in the Git documentation:
 /// https://git-scm.com/docs/git-diff
-async fn process_file_diff(
-    summarize_client: SummarizationClient,
+async fn process_file_diff<T: LlmClient + Clone + Send>(
+    summarize_client: SummarizationClient<T>,
     file_diff: &str,
 ) -> Option<(String, String)> {
     if let Some(file_name) = util::get_file_name_from_diff(file_diff) {
@@ -81,7 +82,10 @@ pub(crate) struct PrepareCommitMsgArgs {
     git_diff_content: Option<PathBuf>,
 }
 
-async fn get_commit_message(client: SummarizationClient, diff_as_input: &str) -> Result<String> {
+async fn get_commit_message<T: LlmClient + Clone + Send + Sync + 'static>(
+    client: SummarizationClient<T>,
+    diff_as_input: &str,
+) -> Result<String> {
     let file_diffs = diff_as_input.split_prefix_inclusive("\ndiff --git ");
 
     let mut set = JoinSet::new();
