@@ -17,7 +17,7 @@ use tokio::task::JoinSet;
 use crate::git;
 
 use crate::help::print_help_openai_api_key;
-use crate::openai::OpenAIClient;
+use crate::llms::openai::OpenAIClient;
 
 use crate::settings::Settings;
 use crate::summarize::SummarizationClient;
