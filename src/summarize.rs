@@ -1,22 +1,19 @@
 use std::collections::HashMap;
 
-use crate::{llms::openai::OpenAIClient, prompt::format_prompt, settings::PromptSettings};
+use crate::llms::base_llm::LlmClient;
+use crate::{prompt::format_prompt, settings::PromptSettings};
 use anyhow::Result;
-
 #[derive(Clone, Debug)]
-pub(crate) struct SummarizationClient {
-    client: OpenAIClient,
+pub(crate) struct SummarizationClient<T: LlmClient + Clone> {
+    client: T,
 
     prompt_file_diff: String,
     prompt_commit_summary: String,
     prompt_commit_title: String,
 }
 
-impl SummarizationClient {
-    pub(crate) fn new(
-        settings: PromptSettings,
-        client: OpenAIClient,
-    ) -> Result<Self, anyhow::Error> {
+impl<T: LlmClient + Clone> SummarizationClient<T> {
+    pub(crate) fn new(settings: PromptSettings, client: T) -> Result<Self> {
         let prompt_file_diff = settings.file_diff.unwrap_or_default();
         let prompt_commit_summary = settings.commit_summary.unwrap_or_default();
         let prompt_commit_title = settings.commit_title.unwrap_or_default();

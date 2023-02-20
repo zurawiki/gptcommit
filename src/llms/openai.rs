@@ -2,11 +2,14 @@ use std::time::Duration;
 
 use anyhow::{anyhow, bail, Result};
 
+use async_trait::async_trait;
 use reqwest::{Client, ClientBuilder};
 use serde_json::{json, Value};
 use tiktoken_rs::tiktoken::{p50k_base, CoreBPE};
 
 use crate::settings::OpenAISettings;
+
+use super::base_llm::LlmClient;
 
 #[derive(Clone, Debug)]
 pub(crate) struct OpenAIClient {
@@ -35,9 +38,24 @@ impl OpenAIClient {
         })
     }
 
+    pub(crate) fn get_prompt_token_limit_for_model(&self) -> usize {
+        match self.model.as_str() {
+            "text-davinci-003" => 4097,
+            "text-curie-001" => 2048,
+            "text-babbage-001" => 2048,
+            "text-ada-001" => 2048,
+            "code-davinci-002" => 8000,
+            "code-cushman-001" => 2048,
+            _ => 4097,
+        }
+    }
+}
+
+#[async_trait]
+impl LlmClient for OpenAIClient {
     /// Sends a request to OpenAI's API to get a text completion.
     /// It takes a prompt as input, and returns the completion.
-    pub(crate) async fn completions(&self, prompt: &str) -> Result<String> {
+    async fn completions(&self, prompt: &str) -> Result<String> {
         let prompt_token_limit = self.get_prompt_token_limit_for_model();
         lazy_static! {
             static ref BPE_TOKENIZER: CoreBPE = p50k_base().unwrap();
@@ -86,17 +104,5 @@ impl OpenAIClient {
             .ok_or_else(|| anyhow!("Unexpected JSON response:\n{}", json_response))?
             .trim()
             .to_string())
-    }
-
-    pub(crate) fn get_prompt_token_limit_for_model(&self) -> usize {
-        match self.model.as_str() {
-            "text-davinci-003" => 4097,
-            "text-curie-001" => 2048,
-            "text-babbage-001" => 2048,
-            "text-ada-001" => 2048,
-            "code-davinci-002" => 8000,
-            "code-cushman-001" => 2048,
-            _ => 4097,
-        }
     }
 }
