@@ -19,13 +19,13 @@ release:
     cargo build --release
 
 install:
-    cargo install --path .
+    cargo install --path . --offline
 
 e2e: install
     sh -eux -c 'for i in ./e2e/test_*.sh ; do sh -x "$i" ; done'
 
 test *args: e2e
-    cargo test
+    cargo test --offline
 alias t := test
 
 lint:
