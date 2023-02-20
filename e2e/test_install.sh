@@ -1,10 +1,9 @@
 #!/bin/sh
 set -eu
 
+export TEMPDIR=$(mktemp -d)
 (
-    rm -rf test_dir_foo
-    mkdir test_dir_foo
-    cd test_dir_foo
+    cd "${TEMPDIR}"
     git init
     gptcommit install
 
@@ -12,28 +11,30 @@ set -eu
     gptcommit install
     # assert still works
 )
-rm -rf test_dir_foo ;
+rm -rf "${TEMPDIR}"
 
 #############################
 
+export TEMPDIR=$(mktemp -d)
 (
-    rm -rf test_dir_foo2
-    mkdir test_dir_foo2
-    cd test_dir_foo2
+    cd "${TEMPDIR}"
     git init
     mkdir a
     cd a
     gptcommit install
 )
-rm -rf test_dir_foo2
+rm -rf "${TEMPDIR}"
 
 #############################
 
+export TEMPDIR=$(mktemp -d)
 (
-    rm -rf test_dir_foo3
-    mkdir test_dir_foo3
-    cd test_dir_foo3
+    cd "${TEMPDIR}"
     # no git init
+    set +e
     gptcommit install ;
+    # TODO assert output
+    test $? -ne 0 || exit $?
+    set -e
 )
-rm -rf test_dir_foo3
+rm -rf "${TEMPDIR}"
