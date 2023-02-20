@@ -9,7 +9,7 @@ use tiktoken_rs::tiktoken::{p50k_base, CoreBPE};
 
 use crate::settings::OpenAISettings;
 
-use super::base_llm::LlmClient;
+use super::llm_client::LlmClient;
 
 #[derive(Clone, Debug)]
 pub(crate) struct OpenAIClient {

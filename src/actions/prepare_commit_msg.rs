@@ -1,52 +1,26 @@
-use anyhow::bail;
 use anyhow::Result;
 use clap::arg;
 use clap::ValueEnum;
 use colored::Colorize;
 
 use clap::Args;
-use tokio::try_join;
-
-use std::collections::HashMap;
 
 use std::fs;
 
 use std::path::PathBuf;
-use tokio::task::JoinSet;
 
 use crate::git;
 
 use crate::help::print_help_openai_api_key;
-use crate::llms::base_llm::LlmClient;
-use crate::llms::openai::OpenAIClient;
+use crate::llms::{llm_client::LlmClient, openai::OpenAIClient};
+use crate::settings::ModelProvider;
 
 use crate::settings::Settings;
 use crate::summarize::SummarizationClient;
-use crate::util;
 use crate::util::SplitPrefixInclusive;
 
-/// Splits the contents of a git diff by file.
-///
-/// The file path is the first string in the returned tuple, and the
-/// file content is the second string in the returned tuple.
-///
-/// The function assumes that the file_diff input is well-formed
-/// according to the Diff format described in the Git documentation:
-/// https://git-scm.com/docs/git-diff
-async fn process_file_diff<T: LlmClient + Clone + Send>(
-    summarize_client: SummarizationClient<T>,
-    file_diff: &str,
-) -> Option<(String, String)> {
-    if let Some(file_name) = util::get_file_name_from_diff(file_diff) {
-        let completion = summarize_client.diff_summary(file_name, file_diff).await;
-        Some((
-            file_name.to_string(),
-            completion.unwrap_or_else(|_| "".to_string()),
-        ))
-    } else {
-        None
-    }
-}
+use crate::llms::tester_foobar::FooBarClient;
+
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, ValueEnum)]
 enum CommitSource {
     #[clap(name = "")]
@@ -82,54 +56,28 @@ pub(crate) struct PrepareCommitMsgArgs {
     git_diff_content: Option<PathBuf>,
 }
 
-async fn get_commit_message<T: LlmClient + Clone + Send + Sync + 'static>(
-    client: SummarizationClient<T>,
-    diff_as_input: &str,
-) -> Result<String> {
-    let file_diffs = diff_as_input.split_prefix_inclusive("\ndiff --git ");
-
-    let mut set = JoinSet::new();
-
-    for file_diff in file_diffs {
-        let file_diff = file_diff.to_owned();
-        let summarize_client = client.clone();
-        set.spawn(async move { process_file_diff(summarize_client, &file_diff).await });
-    }
-
-    let mut summary_for_file: HashMap<String, String> = HashMap::with_capacity(set.len());
-    while let Some(res) = set.join_next().await {
-        if let Some((k, v)) = res.unwrap() {
-            summary_for_file.insert(k, v);
+fn get_llm_client(settings: &Settings) -> Box<dyn LlmClient> {
+    match settings {
+        Settings {
+            model_provider: Some(ModelProvider::TesterFoobar),
+            ..
+        } => Box::new(FooBarClient::new().unwrap()),
+        Settings {
+            model_provider: Some(ModelProvider::OpenAI),
+            openai: Some(openai),
+            ..
+        } => {
+            let client = OpenAIClient::new(openai.to_owned());
+            if let Err(_e) = client {
+                print_help_openai_api_key();
+                panic!("OpenAI API key not found in config or environment");
+            }
+            Box::new(client.unwrap())
         }
+        _ => panic!("Could not load LLM Client from config!"),
     }
-
-    let summary_points = &summary_for_file
-        .iter()
-        .map(|(file_name, completion)| format!("[{file_name}]\n{completion}"))
-        .collect::<Vec<String>>()
-        .join("\n");
-
-    let (title, completion) = try_join!(
-        client.commit_title(summary_points),
-        client.commit_summary(summary_points)
-    )?;
-
-    let mut message = String::with_capacity(1024);
-
-    message.push_str(&format!("{title}\n\n{completion}\n\n"));
-    for (file_name, completion) in &summary_for_file {
-        if !completion.is_empty() {
-            message.push_str(&format!("[{file_name}]\n{completion}\n"));
-        }
-    }
-
-    // split message into lines and uniquefy lines
-    let mut lines = message.lines().collect::<Vec<&str>>();
-    lines.dedup();
-    let message = lines.join("\n");
-
-    Ok(message)
 }
+
 pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Result<()> {
     match (args.commit_source, settings.allow_amend) {
         (CommitSource::Empty, _) | (CommitSource::Commit, Some(true)) => {}
@@ -143,13 +91,7 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
         }
     };
 
-    let client = match OpenAIClient::new(settings.openai.unwrap_or_default()) {
-        Ok(client) => client,
-        Err(_e) => {
-            print_help_openai_api_key();
-            bail!("OpenAI API key not found in config or environment");
-        }
-    };
+    let client = get_llm_client(&settings);
     let summarization_client = SummarizationClient::new(settings.prompt.unwrap(), client)?;
 
     println!("{}", "🤖 Asking GPT-3 to summarize diffs...".green().bold());
@@ -160,7 +102,8 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
         git::get_diffs()?
     };
 
-    let commit_message = get_commit_message(summarization_client, &output).await?;
+    let file_diffs = output.split_prefix_inclusive("\ndiff --git ");
+    let commit_message = summarization_client.get_commit_message(file_diffs).await?;
 
     // prepend output to commit message
     let mut original_message: String = if args.commit_msg_file.is_file() {
