@@ -140,10 +140,8 @@ impl SummarizationClient {
             &self.prompt_tanslation,
             HashMap::from([("commit_message", commit_message), ("output_language", &self.prompt_lang)]),
         )?;
-        println!("prompt: {}", prompt);
         if self.prompt_lang != "English" {
             let completion = self.client.completions(&prompt).await;
-            println!("tanslation: {:?}", completion);
             completion
         } else {
             Ok(commit_message.to_string())

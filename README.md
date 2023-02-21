@@ -86,11 +86,11 @@ For a list of public OpenAI models, checkout the [OpenAI docs](https://beta.open
 `gptcommit` uses English by default. The language can be configured to use other languages as below
 
 ```sh
-gptcommit config set prompt.lang zh-cn
+gptcommit config set output.lang zh-cn
 ```
 
 Now, supported languages are:
-|shortcut|language|
+|locale code|language|
 |-|-|
 |`en`|English|
 |`zh-cn`|简体中文|
