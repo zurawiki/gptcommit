@@ -9,24 +9,15 @@ use strum_macros::EnumString;
 
 // You need to bring the ToString trait into scope to use it
 use std::string::ToString;
-use strum_macros::Display;
+use strum_macros::{Display, IntoStaticStr};
 
 use crate::{
     git::get_hooks_path,
     prompt::{
         PROMPT_TO_SUMMARIZE_DIFF, PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES,
-        PROMPT_TO_SUMMARIZE_DIFF_TITLE,
+        PROMPT_TO_SUMMARIZE_DIFF_TITLE, PROMPT_TO_TRANSLATE
     },
 };
-
-pub fn get_langs() -> HashMap<String, String>{
-    let mut langs = HashMap::new();
-    langs.insert("en".to_string(), "English".to_string());
-    langs.insert("zh-cn".to_string(), "Simplified Chinese".to_string());
-    langs.insert("zh-tw".to_string(), "Traditional Chinese".to_string());
-    langs.insert("ja".to_string(), "Japanese".to_string());
-    langs
-}
 
 #[derive(Debug, Clone, Display, Serialize, Default, EnumString)]
 pub(crate) enum ModelProvider {
@@ -88,7 +79,7 @@ pub(crate) struct PromptSettings {
     pub file_diff: Option<String>,
     pub commit_summary: Option<String>,
     pub commit_title: Option<String>,
-    pub lang: Option<String>,
+    pub translation: Option<String>,
 }
 
 // implement the trait `From<OpenAISettings>` for `ValueKind`
@@ -108,6 +99,41 @@ impl From<PromptSettings> for config::ValueKind {
             config::Value::from(settings.commit_title),
         );
         properties.insert(
+            "translation".to_string(),
+            config::Value::from(settings.translation),
+        );
+        Self::Table(properties)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Display, EnumString, IntoStaticStr)]
+#[strum(serialize_all = "kebab-case")]
+pub enum Language {
+   #[strum(serialize = "en")]
+   #[strum(to_string = "English")]
+   En,
+   #[strum(serialize = "zh-cn")]
+   #[strum(to_string = "Simplified Chinese")]
+   ZhCn,
+   #[strum(serialize = "zh-tw")]
+   #[strum(to_string = "Traditional Chinese")]
+   ZhTw,
+   #[strum(serialize = "ja")]
+   #[strum(to_string = "Japanese")]
+   Ja,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+pub struct OutputSettings {
+    pub lang: Option<String>,
+}
+
+// implement the trait `From<OpenAISettings>` for `ValueKind`
+impl From<OutputSettings> for config::ValueKind {
+    fn from(settings: OutputSettings) -> Self {
+        let mut properties = HashMap::new();
+        properties.insert(
             "lang".to_string(),
             config::Value::from(settings.lang),
         );
@@ -120,6 +146,7 @@ pub(crate) struct Settings {
     pub model_provider: Option<ModelProvider>,
     pub openai: Option<OpenAISettings>,
     pub prompt: Option<PromptSettings>,
+    pub output: Option<OutputSettings>,
     pub allow_amend: Option<bool>,
 }
 
@@ -131,11 +158,11 @@ impl Settings {
     }
 
     pub fn from_set_override(key: &str, value: &str) -> Result<Self, ConfigError> {
-        if key == "prompt.lang" {
-            let langs = get_langs();
-            if !langs.contains_key(value) {
-                return Err(ConfigError::Message(format!("lang must be one of {:?}", langs.keys())));
-            }
+        if key == "output.lang" && Language::from_str(value).is_err() {
+            return Err(ConfigError::Message(format!(
+                "Invalid language: {}.",
+                value,
+            )));
         }
         let mut settings = Self::get_config_builder()?;
         settings = settings.set_override(key, value)?;
@@ -164,6 +191,12 @@ impl Settings {
                     file_diff: Some(PROMPT_TO_SUMMARIZE_DIFF.to_string()),
                     commit_summary: Some(PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES.to_string()),
                     commit_title: Some(PROMPT_TO_SUMMARIZE_DIFF_TITLE.to_string()),
+                    translation: Some(PROMPT_TO_TRANSLATE.to_string()),
+                }),
+            )?
+            .set_default(
+                "output",
+                Some(OutputSettings {
                     lang: Some("en".to_string()),
                 }),
             )?;

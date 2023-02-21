@@ -92,7 +92,11 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
     };
 
     let client = get_llm_client(&settings);
-    let summarization_client = SummarizationClient::new(settings.prompt.unwrap(), client)?;
+    let summarization_client = SummarizationClient::new(
+        settings.prompt.unwrap(), 
+        settings.output.unwrap(), 
+        client
+    )?;
 
     println!("{}", "🤖 Asking GPT-3 to summarize diffs...".green().bold());
 

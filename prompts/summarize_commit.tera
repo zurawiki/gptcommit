@@ -1,4 +1,3 @@
-REMEMBER, ANSWER IN {{ ansewe_langurage }}.
 You are an expert programmer, and you are trying to summarize a pull request.
 You went over every file that was changed in it.
 For some of these files changes where too big and were omitted in the files diff summary.

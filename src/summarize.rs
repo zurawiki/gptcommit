@@ -1,9 +1,10 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::llms::llm_client::LlmClient;
 use crate::util;
-use crate::{prompt::format_prompt, settings::PromptSettings, settings::get_langs};
+use crate::{prompt::format_prompt, settings::PromptSettings, settings::{OutputSettings, Language}};
 use anyhow::Result;
 use tokio::task::JoinSet;
 use tokio::try_join;
@@ -14,29 +15,24 @@ pub(crate) struct SummarizationClient {
     prompt_file_diff: String,
     prompt_commit_summary: String,
     prompt_commit_title: String,
+    prompt_tanslation: String,
     prompt_lang: String,
 }
 
 impl SummarizationClient {
-    pub(crate) fn new(settings: PromptSettings, client: Box<dyn LlmClient>) -> Result<Self> {
-        let langs = get_langs();
-        let prompt_file_diff = settings.file_diff.unwrap_or_default();
-        let prompt_commit_summary = settings.commit_summary.unwrap_or_default();
-        let prompt_commit_title = settings.commit_title.unwrap_or_default();
-        let prompt_lang =   if let Some(lang) = settings.lang {
-            if !langs.contains_key(&lang.to_lowercase()) {
-                panic!("lang must be one of {:?}", langs.keys());
-            }
-            langs.get(&lang.to_lowercase()).unwrap().to_string()
-        } else {
-            langs.get("en").unwrap().to_string()
-        };
+    pub(crate) fn new(prompt_settings: PromptSettings, output_settings: OutputSettings, client: Box<dyn LlmClient>) -> Result<Self> {
+        let prompt_file_diff = prompt_settings.file_diff.unwrap_or_default();
+        let prompt_commit_summary = prompt_settings.commit_summary.unwrap_or_default();
+        let prompt_commit_title = prompt_settings.commit_title.unwrap_or_default();
+        let prompt_tanslation = prompt_settings.translation.unwrap_or_default();
+        let prompt_lang = Language::from_str(&output_settings.lang.unwrap_or_default()).unwrap().to_string();
 
         Ok(Self {
             client: client.into(),
             prompt_file_diff,
             prompt_commit_summary,
             prompt_commit_title,
+            prompt_tanslation,
             prompt_lang,
         })
     }
@@ -80,8 +76,10 @@ impl SummarizationClient {
         // split message into lines and uniquefy lines
         let mut lines = message.lines().collect::<Vec<&str>>();
         lines.dedup();
-        let message = lines.join("\n");
+        let mut message = lines.join("\n");
 
+        message = self.commit_tanslate(&message).await?;
+        
         Ok(message)
     }
 
@@ -110,7 +108,7 @@ impl SummarizationClient {
 
         let prompt = format_prompt(
             &self.prompt_file_diff,
-            HashMap::from([("file_diff", file_diff), ("ansewe_langurage", &self.prompt_lang)]),
+            HashMap::from([("file_diff", file_diff)]),
         )?;
 
         let completion = self.client.completions(&prompt).await;
@@ -120,7 +118,7 @@ impl SummarizationClient {
     pub(crate) async fn commit_summary(&self, summary_points: &str) -> Result<String> {
         let prompt = format_prompt(
             &self.prompt_commit_summary,
-            HashMap::from([("summary_points", summary_points), ("ansewe_langurage", &self.prompt_lang)]),
+            HashMap::from([("summary_points", summary_points)]),
         )?;
 
         let completion = self.client.completions(&prompt).await;
@@ -130,10 +128,25 @@ impl SummarizationClient {
     pub(crate) async fn commit_title(&self, summary_points: &str) -> Result<String> {
         let prompt = format_prompt(
             &self.prompt_commit_title,
-            HashMap::from([("summary_points", summary_points), ("ansewe_langurage", &self.prompt_lang)]),
+            HashMap::from([("summary_points", summary_points)]),
         )?;
 
         let completion = self.client.completions(&prompt).await;
         completion
+    }
+
+    pub(crate) async fn commit_tanslate(&self, commit_message: &str) -> Result<String> {
+        let prompt = format_prompt(
+            &self.prompt_tanslation,
+            HashMap::from([("commit_message", commit_message), ("output_language", &self.prompt_lang)]),
+        )?;
+        println!("prompt: {}", prompt);
+        if self.prompt_lang != "English" {
+            let completion = self.client.completions(&prompt).await;
+            println!("tanslation: {:?}", completion);
+            completion
+        } else {
+            Ok(commit_message.to_string())
+        }
     }
 }

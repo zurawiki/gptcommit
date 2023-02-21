@@ -13,3 +13,4 @@ pub static PROMPT_TO_SUMMARIZE_DIFF: &str = include_str!("../prompts/summarize_f
 pub static PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES: &str =
     include_str!("../prompts/summarize_commit.tera");
 pub static PROMPT_TO_SUMMARIZE_DIFF_TITLE: &str = include_str!("../prompts/title_commit.tera");
+pub static PROMPT_TO_TRANSLATE: &str = include_str!("../prompts/translation.tera");
