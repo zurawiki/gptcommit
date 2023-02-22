@@ -8,6 +8,7 @@ mod cmd;
 mod git;
 mod prompt;
 mod summarize;
+mod toml;
 mod util;
 
 use anyhow::Result;

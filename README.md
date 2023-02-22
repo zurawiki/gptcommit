@@ -51,6 +51,8 @@ Configs are applied in the following order:
 - The settings as read from the repo clone at `$GIT_ROOT/.git/gptcommit.toml`.
 - Environment variables starting with `GPTCOMMIT__*`.
 
+See all the config options available with `gptcommit config keys`.
+
 ### Set your OpenAI API key
 
 Persist your OpenAI key
@@ -138,7 +140,6 @@ All of these awesome projects are built using  `gptcommit`.
 ## Encountered any bugs?
 
 If you encounter any bugs or have any suggestions for improvements, please open an issue on the repository.
-
 
 ## License
 
