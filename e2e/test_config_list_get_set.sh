@@ -3,6 +3,7 @@ set -eu
 
 gptcommit config list
 # assert is valid TOML
+gptcommit config keys
 
 gptcommit config get openai.model
 # assert default = text-davinci-003

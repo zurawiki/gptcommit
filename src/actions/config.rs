@@ -1,14 +1,18 @@
 use std::{collections::VecDeque, fs, path::PathBuf};
 
-use async_std::path::Path;
 use clap::{Args, Subcommand};
 use toml::Value;
 
-use crate::settings::{get_local_config_path, get_user_config_path, Settings};
+use crate::{
+    settings::{get_local_config_path, get_user_config_path, Settings},
+    toml::DeepKeysCollector,
+};
 use anyhow::{bail, Result};
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum ConfigAction {
+    /// List all config keys
+    Keys,
     /// List all config values
     List {
         /// if set, will save the config to the user's config file
@@ -44,6 +48,7 @@ pub(crate) async fn main(settings: Settings, args: ConfigArgs) -> Result<()> {
     debug!("Config subcommand - Settings = {:?}", settings);
 
     match args.action {
+        ConfigAction::Keys => keys(settings).await,
         ConfigAction::List { save } => list(settings, save).await,
         ConfigAction::Get { key } => get(settings, key).await,
         ConfigAction::Set { key, value, local } => set(settings, key, value, local).await,
@@ -58,13 +63,20 @@ fn get_config_path(local: bool) -> Result<PathBuf> {
         } else {
             bail!("No repo-local config found. Please run `git init` to create a repo first");
         }
+    } else if let Some(config_path) = get_user_config_path() {
+        Ok(config_path)
     } else {
-                if let Some(config_path) = get_user_config_path() {
-            Ok(config_path)
-        } else {
-            bail!("No user config found.");
-        }
+        bail!("No user config found.");
     }
+}
+
+async fn keys(settings: Settings) -> Result<()> {
+    let toml_string = toml::to_string_pretty(&settings).unwrap();
+    let keys = DeepKeysCollector::get_keys(toml_string);
+    for key in keys {
+        println!("{key}");
+    }
+    Ok(())
 }
 
 async fn delete(_settings: Settings, full_key: String, local: bool) -> Result<()> {
