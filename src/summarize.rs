@@ -4,7 +4,11 @@ use std::sync::Arc;
 
 use crate::llms::llm_client::LlmClient;
 use crate::util;
-use crate::{prompt::format_prompt, settings::PromptSettings, settings::{OutputSettings, Language}};
+use crate::{
+    prompt::format_prompt,
+    settings::PromptSettings,
+    settings::{Language, OutputSettings},
+};
 use anyhow::Result;
 use tokio::task::JoinSet;
 use tokio::try_join;
@@ -20,12 +24,18 @@ pub(crate) struct SummarizationClient {
 }
 
 impl SummarizationClient {
-    pub(crate) fn new(prompt_settings: PromptSettings, output_settings: OutputSettings, client: Box<dyn LlmClient>) -> Result<Self> {
+    pub(crate) fn new(
+        prompt_settings: PromptSettings,
+        output_settings: OutputSettings,
+        client: Box<dyn LlmClient>,
+    ) -> Result<Self> {
         let prompt_file_diff = prompt_settings.file_diff.unwrap_or_default();
         let prompt_commit_summary = prompt_settings.commit_summary.unwrap_or_default();
         let prompt_commit_title = prompt_settings.commit_title.unwrap_or_default();
         let prompt_tanslation = prompt_settings.translation.unwrap_or_default();
-        let prompt_lang = Language::from_str(&output_settings.lang.unwrap_or_default()).unwrap().to_string();
+        let prompt_lang = Language::from_str(&output_settings.lang.unwrap_or_default())
+            .unwrap()
+            .to_string();
 
         Ok(Self {
             client: client.into(),
@@ -79,7 +89,7 @@ impl SummarizationClient {
         let mut message = lines.join("\n");
 
         message = self.commit_tanslate(&message).await?;
-        
+
         Ok(message)
     }
 
@@ -138,7 +148,10 @@ impl SummarizationClient {
     pub(crate) async fn commit_tanslate(&self, commit_message: &str) -> Result<String> {
         let prompt = format_prompt(
             &self.prompt_tanslation,
-            HashMap::from([("commit_message", commit_message), ("output_language", &self.prompt_lang)]),
+            HashMap::from([
+                ("commit_message", commit_message),
+                ("output_language", &self.prompt_lang),
+            ]),
         )?;
         if self.prompt_lang != "English" {
             let completion = self.client.completions(&prompt).await;

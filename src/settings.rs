@@ -15,7 +15,7 @@ use crate::{
     git::get_hooks_path,
     prompt::{
         PROMPT_TO_SUMMARIZE_DIFF, PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES,
-        PROMPT_TO_SUMMARIZE_DIFF_TITLE, PROMPT_TO_TRANSLATE
+        PROMPT_TO_SUMMARIZE_DIFF_TITLE, PROMPT_TO_TRANSLATE,
     },
 };
 
@@ -106,22 +106,21 @@ impl From<PromptSettings> for config::ValueKind {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-#[derive(Display, EnumString, IntoStaticStr)]
+#[derive(Debug, Clone, Copy, PartialEq, Display, EnumString, IntoStaticStr)]
 #[strum(serialize_all = "kebab-case")]
 pub enum Language {
-   #[strum(serialize = "en")]
-   #[strum(to_string = "English")]
-   En,
-   #[strum(serialize = "zh-cn")]
-   #[strum(to_string = "Simplified Chinese")]
-   ZhCn,
-   #[strum(serialize = "zh-tw")]
-   #[strum(to_string = "Traditional Chinese")]
-   ZhTw,
-   #[strum(serialize = "ja")]
-   #[strum(to_string = "Japanese")]
-   Ja,
+    #[strum(serialize = "en")]
+    #[strum(to_string = "English")]
+    En,
+    #[strum(serialize = "zh-cn")]
+    #[strum(to_string = "Simplified Chinese")]
+    ZhCn,
+    #[strum(serialize = "zh-tw")]
+    #[strum(to_string = "Traditional Chinese")]
+    ZhTw,
+    #[strum(serialize = "ja")]
+    #[strum(to_string = "Japanese")]
+    Ja,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
@@ -133,10 +132,7 @@ pub struct OutputSettings {
 impl From<OutputSettings> for config::ValueKind {
     fn from(settings: OutputSettings) -> Self {
         let mut properties = HashMap::new();
-        properties.insert(
-            "lang".to_string(),
-            config::Value::from(settings.lang),
-        );
+        properties.insert("lang".to_string(), config::Value::from(settings.lang));
         Self::Table(properties)
     }
 }
@@ -159,10 +155,7 @@ impl Settings {
 
     pub fn from_set_override(key: &str, value: &str) -> Result<Self, ConfigError> {
         if key == "output.lang" && Language::from_str(value).is_err() {
-            return Err(ConfigError::Message(format!(
-                "Invalid language: {}.",
-                value,
-            )));
+            return Err(ConfigError::Message(format!("Invalid language: {value}.",)));
         }
         let mut settings = Self::get_config_builder()?;
         settings = settings.set_override(key, value)?;
