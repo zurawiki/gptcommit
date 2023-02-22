@@ -1,5 +1,6 @@
 use std::{collections::VecDeque, fs, path::PathBuf};
 
+use async_std::path::Path;
 use clap::{Args, Subcommand};
 use toml::Value;
 
@@ -50,14 +51,26 @@ pub(crate) async fn main(settings: Settings, args: ConfigArgs) -> Result<()> {
     }
 }
 
+fn get_config_path(local: bool) -> Result<PathBuf> {
+    if local {
+        if let Some(config_path) = get_local_config_path() {
+            Ok(config_path)
+        } else {
+            bail!("No repo-local config found. Please run `git init` to create a repo first");
+        }
+    } else {
+                if let Some(config_path) = get_user_config_path() {
+            Ok(config_path)
+        } else {
+            bail!("No user config found.");
+        }
+    }
+}
+
 async fn delete(_settings: Settings, full_key: String, local: bool) -> Result<()> {
     let settings = &Settings::from_clear(&full_key)?;
     let toml_string = toml::to_string_pretty(settings).unwrap();
-    let config_path: PathBuf = if local {
-        get_local_config_path().expect("Could not find repo-local config path")
-    } else {
-        get_user_config_path().expect("Could not find user config path")
-    };
+    let config_path = get_config_path(local)?;
     fs::write(&config_path, toml_string)?;
     println!("Cleared {full_key}");
     println!("Config saved to {}", config_path.display());
@@ -67,11 +80,7 @@ async fn delete(_settings: Settings, full_key: String, local: bool) -> Result<()
 async fn set(_settings: Settings, full_key: String, value: String, local: bool) -> Result<()> {
     let settings = &Settings::from_set_override(&full_key, &value)?;
     let toml_string = toml::to_string_pretty(settings).unwrap();
-    let config_path: PathBuf = if local {
-        get_local_config_path().expect("Could not find repo-local config path")
-    } else {
-        get_user_config_path().expect("Could not find user config path")
-    };
+    let config_path = get_config_path(local)?;
     fs::write(&config_path, toml_string)?;
     println!("{full_key} = {value}");
     println!("Config saved to {}", config_path.display());
