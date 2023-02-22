@@ -1,9 +1,14 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::llms::llm_client::LlmClient;
 use crate::util;
-use crate::{prompt::format_prompt, settings::PromptSettings};
+use crate::{
+    prompt::format_prompt,
+    settings::PromptSettings,
+    settings::{Language, OutputSettings},
+};
 use anyhow::Result;
 use tokio::task::JoinSet;
 use tokio::try_join;
@@ -14,19 +19,31 @@ pub(crate) struct SummarizationClient {
     prompt_file_diff: String,
     prompt_commit_summary: String,
     prompt_commit_title: String,
+    prompt_translation: String,
+    prompt_lang: String,
 }
 
 impl SummarizationClient {
-    pub(crate) fn new(settings: PromptSettings, client: Box<dyn LlmClient>) -> Result<Self> {
-        let prompt_file_diff = settings.file_diff.unwrap_or_default();
-        let prompt_commit_summary = settings.commit_summary.unwrap_or_default();
-        let prompt_commit_title = settings.commit_title.unwrap_or_default();
+    pub(crate) fn new(
+        prompt_settings: PromptSettings,
+        output_settings: OutputSettings,
+        client: Box<dyn LlmClient>,
+    ) -> Result<Self> {
+        let prompt_file_diff = prompt_settings.file_diff.unwrap_or_default();
+        let prompt_commit_summary = prompt_settings.commit_summary.unwrap_or_default();
+        let prompt_commit_title = prompt_settings.commit_title.unwrap_or_default();
+        let prompt_translation = prompt_settings.translation.unwrap_or_default();
+        let prompt_lang = Language::from_str(&output_settings.lang.unwrap_or_default())
+            .unwrap()
+            .to_string();
 
         Ok(Self {
             client: client.into(),
             prompt_file_diff,
             prompt_commit_summary,
             prompt_commit_title,
+            prompt_translation,
+            prompt_lang,
         })
     }
 
@@ -70,6 +87,8 @@ impl SummarizationClient {
         let mut lines = message.lines().collect::<Vec<&str>>();
         lines.dedup();
         let message = lines.join("\n");
+
+        let message = self.commit_translate(&message).await?;
 
         Ok(message)
     }
@@ -124,5 +143,21 @@ impl SummarizationClient {
 
         let completion = self.client.completions(&prompt).await;
         completion
+    }
+
+    pub(crate) async fn commit_translate(&self, commit_message: &str) -> Result<String> {
+        let prompt = format_prompt(
+            &self.prompt_translation,
+            HashMap::from([
+                ("commit_message", commit_message),
+                ("output_language", &self.prompt_lang),
+            ]),
+        )?;
+        if self.prompt_lang != "English" {
+            let completion = self.client.completions(&prompt).await;
+            completion
+        } else {
+            Ok(commit_message.to_string())
+        }
     }
 }
