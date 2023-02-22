@@ -82,7 +82,7 @@ pub(crate) struct PromptSettings {
     pub translation: Option<String>,
 }
 
-// implement the trait `From<OpenAISettings>` for `ValueKind`
+// implement the trait `From<PromptSettings>` for `ValueKind`
 impl From<PromptSettings> for config::ValueKind {
     fn from(settings: PromptSettings) -> Self {
         let mut properties = HashMap::new();
@@ -128,7 +128,7 @@ pub struct OutputSettings {
     pub lang: Option<String>,
 }
 
-// implement the trait `From<OpenAISettings>` for `ValueKind`
+// implement the trait `From<OutputSettings>` for `ValueKind`
 impl From<OutputSettings> for config::ValueKind {
     fn from(settings: OutputSettings) -> Self {
         let mut properties = HashMap::new();

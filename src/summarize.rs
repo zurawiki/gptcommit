@@ -19,7 +19,7 @@ pub(crate) struct SummarizationClient {
     prompt_file_diff: String,
     prompt_commit_summary: String,
     prompt_commit_title: String,
-    prompt_tanslation: String,
+    prompt_translation: String,
     prompt_lang: String,
 }
 
@@ -32,7 +32,7 @@ impl SummarizationClient {
         let prompt_file_diff = prompt_settings.file_diff.unwrap_or_default();
         let prompt_commit_summary = prompt_settings.commit_summary.unwrap_or_default();
         let prompt_commit_title = prompt_settings.commit_title.unwrap_or_default();
-        let prompt_tanslation = prompt_settings.translation.unwrap_or_default();
+        let prompt_translation = prompt_settings.translation.unwrap_or_default();
         let prompt_lang = Language::from_str(&output_settings.lang.unwrap_or_default())
             .unwrap()
             .to_string();
@@ -42,7 +42,7 @@ impl SummarizationClient {
             prompt_file_diff,
             prompt_commit_summary,
             prompt_commit_title,
-            prompt_tanslation,
+            prompt_translation,
             prompt_lang,
         })
     }
@@ -86,9 +86,9 @@ impl SummarizationClient {
         // split message into lines and uniquefy lines
         let mut lines = message.lines().collect::<Vec<&str>>();
         lines.dedup();
-        let mut message = lines.join("\n");
+        let message = lines.join("\n");
 
-        message = self.commit_tanslate(&message).await?;
+        let message = self.commit_translate(&message).await?;
 
         Ok(message)
     }
@@ -145,9 +145,9 @@ impl SummarizationClient {
         completion
     }
 
-    pub(crate) async fn commit_tanslate(&self, commit_message: &str) -> Result<String> {
+    pub(crate) async fn commit_translate(&self, commit_message: &str) -> Result<String> {
         let prompt = format_prompt(
-            &self.prompt_tanslation,
+            &self.prompt_translation,
             HashMap::from([
                 ("commit_message", commit_message),
                 ("output_language", &self.prompt_lang),
