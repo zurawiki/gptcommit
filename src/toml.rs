@@ -12,6 +12,7 @@ impl DeepKeysCollector<'_> {
         let mut visitor = DeepKeysCollector::default();
         visitor.visit_document(&document);
 
+        visitor.keys.dedup();
         visitor.keys.sort();
         visitor.keys
     }
@@ -76,11 +77,13 @@ the-force = { value = "surrounds-you" }
         visitor.visit_document(&document);
 
         assert_eq!(visitor.current_path, Vec::<&str>::new());
+        visitor.keys.dedup();
         visitor.keys.sort();
         assert_eq!(
             visitor.keys,
             vec![
                 "allow_amend",
+                "file_ignore",
                 "model_provider",
                 "openai.api_key",
                 "openai.model",
@@ -101,6 +104,7 @@ the-force = { value = "surrounds-you" }
             DeepKeysCollector::get_keys(input),
             vec![
                 "allow_amend",
+                "file_ignore",
                 "model_provider",
                 "openai.api_key",
                 "openai.model",

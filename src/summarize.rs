@@ -3,12 +3,9 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::llms::llm_client::LlmClient;
+use crate::settings::Settings;
 use crate::util;
-use crate::{
-    prompt::format_prompt,
-    settings::PromptSettings,
-    settings::{Language, OutputSettings},
-};
+use crate::{prompt::format_prompt, settings::Language};
 use anyhow::Result;
 use tokio::task::JoinSet;
 use tokio::try_join;
@@ -16,6 +13,7 @@ use tokio::try_join;
 pub(crate) struct SummarizationClient {
     client: Arc<dyn LlmClient>,
 
+    file_ignore: Vec<String>,
     prompt_file_diff: String,
     prompt_commit_summary: String,
     prompt_commit_title: String,
@@ -24,21 +22,20 @@ pub(crate) struct SummarizationClient {
 }
 
 impl SummarizationClient {
-    pub(crate) fn new(
-        prompt_settings: PromptSettings,
-        output_settings: OutputSettings,
-        client: Box<dyn LlmClient>,
-    ) -> Result<Self> {
-        let prompt_file_diff = prompt_settings.file_diff.unwrap_or_default();
-        let prompt_commit_summary = prompt_settings.commit_summary.unwrap_or_default();
-        let prompt_commit_title = prompt_settings.commit_title.unwrap_or_default();
-        let prompt_translation = prompt_settings.translation.unwrap_or_default();
-        let prompt_lang = Language::from_str(&output_settings.lang.unwrap_or_default())
+    pub(crate) fn new(settings: Settings, client: Box<dyn LlmClient>) -> Result<Self> {
+        let prompt = settings.prompt.unwrap();
+
+        let prompt_file_diff = prompt.file_diff.unwrap_or_default();
+        let prompt_commit_summary = prompt.commit_summary.unwrap_or_default();
+        let prompt_commit_title = prompt.commit_title.unwrap_or_default();
+        let prompt_translation = prompt.translation.unwrap_or_default();
+        let prompt_lang = Language::from_str(&settings.output.unwrap().lang.unwrap_or_default())
             .unwrap()
             .to_string();
-
+        let file_ignore = settings.file_ignore.unwrap_or_default();
         Ok(Self {
             client: client.into(),
+            file_ignore,
             prompt_file_diff,
             prompt_commit_summary,
             prompt_commit_title,
@@ -103,6 +100,15 @@ impl SummarizationClient {
     /// https://git-scm.com/docs/git-diff
     async fn process_file_diff(&self, file_diff: &str) -> Option<(String, String)> {
         if let Some(file_name) = util::get_file_name_from_diff(file_diff) {
+            if self
+                .file_ignore
+                .iter()
+                .any(|ignore| file_name.contains(ignore))
+            {
+                warn!("skipping {file_name} due to file_ignore setting");
+
+                return None;
+            }
             let completion = self.diff_summary(file_name, file_diff).await;
             Some((
                 file_name.to_string(),

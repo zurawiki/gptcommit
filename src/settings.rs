@@ -19,6 +19,13 @@ use crate::{
     },
 };
 
+static DEFAULT_FILES_TO_IGNORE: &[&str; 4] = &[
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "Cargo.lock",
+];
+
 #[derive(Debug, Clone, Display, Serialize, Default, EnumString)]
 pub(crate) enum ModelProvider {
     #[default]
@@ -143,7 +150,10 @@ pub(crate) struct Settings {
     pub openai: Option<OpenAISettings>,
     pub prompt: Option<PromptSettings>,
     pub output: Option<OutputSettings>,
+    /// Whether to run githook when amending the commit
     pub allow_amend: Option<bool>,
+    /// Files to ignore, format similar to gitignore
+    pub file_ignore: Option<Vec<String>>,
 }
 
 impl Settings {
@@ -170,6 +180,14 @@ impl Settings {
     fn get_config_builder() -> Result<ConfigBuilder<DefaultState>, ConfigError> {
         let mut settings = Config::builder()
             .set_default("allow_amend", false)?
+            .set_default(
+                "file_ignore",
+                DEFAULT_FILES_TO_IGNORE
+                    .to_vec()
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>(),
+            )?
             .set_default("model_provider", ModelProvider::OpenAI)?
             .set_default(
                 "openai",
