@@ -11,7 +11,16 @@ use crate::cmd;
 use anyhow::{bail, Result};
 
 pub(crate) fn get_diffs() -> Result<String> {
-    let output = cmd::run_command("git", &["diff", "--staged", "-w"])?;
+    let output = cmd::run_command(
+        "git",
+        &[
+            "diff",
+            "--staged",
+            "--ignore-all-space",
+            "--diff-algorithm=minimal",
+            "--function-context",
+        ],
+    )?;
 
     Ok(output)
 }
