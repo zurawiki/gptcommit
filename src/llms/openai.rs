@@ -40,13 +40,14 @@ impl OpenAIClient {
 
     pub(crate) fn get_prompt_token_limit_for_model(&self) -> usize {
         match self.model.as_str() {
-            "text-davinci-003" => 4097,
+            "text-davinci-003" => 4000,
+            "text-davinci-002" => 4000,
             "text-curie-001" => 2048,
             "text-babbage-001" => 2048,
             "text-ada-001" => 2048,
-            "code-davinci-002" => 8000,
+            "code-davinci-002" => 4000,
             "code-cushman-001" => 2048,
-            _ => 4097,
+            _ => 4096,
         }
     }
 }
