@@ -3,6 +3,7 @@ use std::time::Duration;
 use anyhow::{anyhow, bail, Result};
 
 use async_trait::async_trait;
+use colored::Colorize;
 use reqwest::{Client, ClientBuilder};
 use serde_json::{json, Value};
 use tiktoken_rs::tiktoken::{p50k_base, CoreBPE};
@@ -102,7 +103,24 @@ impl LlmClient for OpenAIClient {
         })?;
         Ok(json_response["choices"][0]["text"]
             .as_str()
-            .ok_or_else(|| anyhow!("Unexpected JSON response:\n{}", json_response))?
+            .ok_or_else(|| {
+                let error_message: &str = json_response
+                    .get("error")
+                    .and_then(|e| e.get("message"))
+                    .and_then(|m| m.as_str())
+                    .unwrap_or_default();
+                if !error_message.is_empty() {
+                    return anyhow!(
+                        "{}",
+                        format!("OpenAI error: {error_message}").bold().yellow()
+                    );
+                }
+
+                anyhow!(
+                    "Unexpected API response:\n{}",
+                    json_response.to_string().yellow()
+                )
+            })?
             .trim()
             .to_string())
     }
