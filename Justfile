@@ -22,11 +22,14 @@ install:
     cargo install --path .
 
 e2e: install
-    sh -eux -c 'for i in ./e2e/test_*.sh ; do sh -x "$i" ; done'
+    sh -eux -c 'for i in ./tests/e2e/test_*.sh ; do sh -x "$i" ; done'
 
 test *args: e2e
     cargo test
 alias t := test
+
+bench: install
+    sh ./tests/bench/run_bench.sh
 
 lint:
     cargo fmt --all -- --check
