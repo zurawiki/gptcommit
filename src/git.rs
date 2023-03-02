@@ -43,7 +43,7 @@ pub(crate) fn get_hooks_path() -> Result<PathBuf> {
     // create dirs first otherwise canonicalize will fail
     fs::create_dir_all(&rel_hooks_path)?;
     #[cfg(unix)]
-    fs::set_permissions(&rel_hooks_path, Permissions::from_mode(0o755))?;
+    fs::set_permissions(&rel_hooks_path, Permissions::from_mode(0o700))?;
     // turn relative path into absolute path
     let hooks_path = std::fs::canonicalize(rel_hooks_path)?;
     Ok(hooks_path)

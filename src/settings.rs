@@ -1,4 +1,6 @@
 use std::{collections::HashMap, fs, path::PathBuf, str::FromStr};
+#[cfg(unix)]
+use std::{fs::Permissions, os::unix::prelude::PermissionsExt};
 
 use config::{
     builder::DefaultState, Config, ConfigBuilder, ConfigError, Environment, File, Source,
@@ -271,6 +273,8 @@ pub fn get_local_config_path() -> Option<PathBuf> {
             .join("gptcommit.toml");
         if !config_path.exists() {
             fs::write(&config_path, "").ok()?;
+            #[cfg(unix)]
+            fs::set_permissions(&config_path, Permissions::from_mode(0o600)).unwrap();
         }
         return Some(config_path);
     }
@@ -287,6 +291,8 @@ pub fn get_user_config_path() -> Option<PathBuf> {
         let config_path = config_dir.join("config.toml");
         if !config_path.exists() {
             fs::write(&config_path, "").ok()?;
+            #[cfg(unix)]
+            fs::set_permissions(&config_path, Permissions::from_mode(0o600)).unwrap();
         }
         return Some(config_path);
     }
