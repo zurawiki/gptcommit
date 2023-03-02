@@ -1,20 +1,16 @@
-use std::time::Duration;
-
 use anyhow::{anyhow, bail, Result};
 
 use async_trait::async_trait;
-use colored::Colorize;
-use reqwest::{Client, ClientBuilder};
-use serde_json::{json, Value};
+
 use tiktoken_rs::tiktoken::{p50k_base, CoreBPE};
 
 use crate::settings::OpenAISettings;
+use async_openai::{types::CreateCompletionRequestArgs, Client};
 
 use super::llm_client::LlmClient;
 
 #[derive(Clone, Debug)]
 pub(crate) struct OpenAIClient {
-    api_key: String,
     model: String,
     client: Client,
 }
@@ -30,13 +26,8 @@ impl OpenAIClient {
             bail!("No OpenAI model configured.")
         }
 
-        let timeout = Duration::new(15, 0);
-        let client = ClientBuilder::new().timeout(timeout).build()?;
-        Ok(Self {
-            api_key,
-            model,
-            client,
-        })
+        let client = Client::new().with_api_key(&api_key);
+        Ok(Self { model, client })
     }
 
     pub(crate) fn get_prompt_token_limit_for_model(&self) -> usize {
@@ -73,55 +64,31 @@ impl LlmClient for OpenAIClient {
             bail!(error_msg)
         }
 
-        let json_data = json!({
-            "model": self.model,
-            "prompt": prompt,
-            "temperature": 0.5,
-            "max_tokens": output_length,
-            "top_p": 1,
-            "frequency_penalty": 0,
-            "presence_penalty": 0
-        });
-
-        let request = self
-            .client
-            .post("https://api.openai.com/v1/completions")
-            .header("Content-Type", "application/json")
-            .header("Authorization", format!("Bearer {}", self.api_key))
-            .json(&json_data);
+        // Create request using builder pattern
+        let request = CreateCompletionRequestArgs::default()
+            .model(&self.model)
+            .prompt(prompt)
+            .max_tokens(output_length as u16)
+            .temperature(0.5)
+            .top_p(1.)
+            .frequency_penalty(0.)
+            .presence_penalty(0.)
+            .build()?;
 
         debug!("Sending request to OpenAI:\n{:?}", request);
 
-        let response = request.send().await?;
-        let response_body = response.text().await?;
-        let json_response: Value = serde_json::from_str(&response_body).map_err(|e| {
-            anyhow!(
-                "Could not decode JSON response: {}\nResponse body: {:?}",
-                e,
-                response_body
-            )
-        })?;
-        Ok(json_response["choices"][0]["text"]
-            .as_str()
-            .ok_or_else(|| {
-                let error_message: &str = json_response
-                    .get("error")
-                    .and_then(|e| e.get("message"))
-                    .and_then(|m| m.as_str())
-                    .unwrap_or_default();
-                if !error_message.is_empty() {
-                    return anyhow!(
-                        "{}",
-                        format!("OpenAI error: {error_message}").bold().yellow()
-                    );
-                }
+        let response = self
+            .client
+            .completions() // Get the API "group" (completions, images, etc.) from the client
+            .create(request) // Make the API call in that "group"
+            .await?;
 
-                anyhow!(
-                    "Unexpected API response:\n{}",
-                    json_response.to_string().yellow()
-                )
-            })?
-            .trim()
-            .to_string())
+        let completion = response
+            .choices
+            .first()
+            .ok_or(anyhow!("No completion results"))
+            .map(|c| c.text.clone());
+
+        return completion;
     }
 }
