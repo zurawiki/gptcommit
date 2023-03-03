@@ -21,6 +21,8 @@ use crate::{
     },
 };
 
+static DEFAULT_OPENAI_MODEL: &str = "gpt-3.5-turbo";
+
 static DEFAULT_FILES_TO_IGNORE: &[&str; 4] = &[
     "package-lock.json",
     "yarn.lock",
@@ -195,7 +197,7 @@ impl Settings {
                 "openai",
                 Some(OpenAISettings {
                     api_key: None,
-                    model: Some("text-davinci-003".to_string()),
+                    model: Some(DEFAULT_OPENAI_MODEL.to_string()),
                 }),
             )?
             .set_default(
