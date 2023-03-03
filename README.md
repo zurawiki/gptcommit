@@ -135,7 +135,7 @@ You can allow gptcommit to summarize amended commits with the following configur
 All of these awesome projects are built using  `gptcommit`.
 
 - A VSCode extension you can
-  [install here](https://marketplace.visualstudio.com/items?itemName=pwwang.gptcommit) | [GitHub](https://github.com/pwwangvscode-gptcommit)
+  [install here](https://marketplace.visualstudio.com/items?itemName=pwwang.gptcommit) | [GitHub](https://github.com/pwwang/vscode-gptcommit)
 
 ## Encountered any bugs?
 
