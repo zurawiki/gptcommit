@@ -125,12 +125,11 @@ dependencies = [
 
 [[package]]
 name = "async-lock"
-version = "2.6.0"
+version = "2.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8101efe8695a6c17e02911402145357e718ac92d3ff88ae8419e84b1707b685"
+checksum = "fa24f727524730b077666307f2734b4a1a1c57acb79193127dcc8914d5242dd7"
 dependencies = [
  "event-listener",
- "futures-lite",
 ]
 
 [[package]]
@@ -870,7 +869,7 @@ dependencies = [
 
 [[package]]
 name = "gptcommit"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "async-openai",
