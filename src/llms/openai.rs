@@ -32,7 +32,14 @@ impl OpenAIClient {
             bail!("No OpenAI model configured.")
         }
 
-        let client = Client::new().with_api_key(&api_key);
+        let mut client = Client::new().with_api_key(&api_key);
+
+        if settings.retries.unwrap_or_default() > 0 {
+            let backoff = backoff::ExponentialBackoffBuilder::new()
+                .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
+                .build();
+            client = client.with_backoff(backoff);
+        }
         Ok(Self { model, client })
     }
 

@@ -21,6 +21,7 @@ anyhow = "1.0.69"
 async-openai = "0.8.0"
 async-std = "1.12.0"
 async-trait = "0.1.64"
+backoff = "0.4.0"
 clap = { version = "4.1.8", features = ["derive"] }
 colored = "2.0.0"
 config = { version = "0.13.3", features = ["toml"] }

@@ -876,6 +876,7 @@ dependencies = [
  "async-openai",
  "async-std",
  "async-trait",
+ "backoff",
  "clap",
  "colored",
  "config",
