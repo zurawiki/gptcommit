@@ -96,18 +96,11 @@ impl OpenAIClient {
     ) -> Result<String> {
         let request = CreateChatCompletionRequestArgs::default()
             .model(&self.model)
-        .messages([
-            ChatCompletionRequestMessageArgs::default()
-                .role(Role::System)
-                .content("You are an expect, helpful programming assistant that has a deep understanding of all programming languages including Python, Rust and Javascript.")
-                .build()?,
-            ChatCompletionRequestMessageArgs::default()
+            .messages([ChatCompletionRequestMessageArgs::default()
                 .role(Role::User)
                 .content(prompt)
-                .build()?,
-
-        ])
-        .build()?;
+                .build()?])
+            .build()?;
 
         let response = self.client.chat().create(request).await?;
 

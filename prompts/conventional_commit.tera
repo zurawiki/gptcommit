@@ -6,9 +6,9 @@ Determine the best label for the commit.
 Here are the labels you can choose from:
 
 - build: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
-- chore: Changes to the build process or auxiliary tools and libraries such as documentation generation
-- ci: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)
-- docs: Documentation only changes
+- chore: Updating libraries, copyrights or other repo setting, includes updating dependencies.
+- ci: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, GitHub Actions)
+- docs: Non-code changes, such as fixing typos or adding new documentation
 - feat: a commit of the type feat introduces a new feature to the codebase
 - fix: A commit of the type fix patches a bug in your codebase
 - perf: A code change that improves performance
