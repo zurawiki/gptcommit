@@ -18,20 +18,23 @@ pub(crate) struct SummarizationClient {
     prompt_commit_summary: String,
     prompt_commit_title: String,
     prompt_translation: String,
-    prompt_lang: String,
+    output_lang: Language,
+    output_show_per_file_summary: bool,
 }
 
 impl SummarizationClient {
     pub(crate) fn new(settings: Settings, client: Box<dyn LlmClient>) -> Result<Self> {
-        let prompt = settings.prompt.unwrap();
+        let prompt_settings = settings.prompt.unwrap_or_default();
 
-        let prompt_file_diff = prompt.file_diff.unwrap_or_default();
-        let prompt_commit_summary = prompt.commit_summary.unwrap_or_default();
-        let prompt_commit_title = prompt.commit_title.unwrap_or_default();
-        let prompt_translation = prompt.translation.unwrap_or_default();
-        let prompt_lang = Language::from_str(&settings.output.unwrap().lang.unwrap_or_default())
-            .unwrap()
-            .to_string();
+        let prompt_file_diff = prompt_settings.file_diff.unwrap_or_default();
+        let prompt_commit_summary = prompt_settings.commit_summary.unwrap_or_default();
+        let prompt_commit_title = prompt_settings.commit_title.unwrap_or_default();
+        let prompt_translation = prompt_settings.translation.unwrap_or_default();
+
+        let output_settings = settings.output.unwrap_or_default();
+        let output_lang =
+            Language::from_str(&output_settings.lang.unwrap_or_default()).unwrap_or_default();
+        let output_show_per_file_summary = output_settings.show_per_file_summary.unwrap_or(false);
         let file_ignore = settings.file_ignore.unwrap_or_default();
         Ok(Self {
             client: client.into(),
@@ -40,7 +43,8 @@ impl SummarizationClient {
             prompt_commit_summary,
             prompt_commit_title,
             prompt_translation,
-            prompt_lang,
+            output_lang,
+            output_show_per_file_summary,
         })
     }
 
@@ -74,9 +78,11 @@ impl SummarizationClient {
         let mut message = String::with_capacity(1024);
 
         message.push_str(&format!("{title}\n\n{completion}\n\n"));
-        for (file_name, completion) in &summary_for_file {
-            if !completion.is_empty() {
-                message.push_str(&format!("[{file_name}]\n{completion}\n"));
+        if self.output_show_per_file_summary {
+            for (file_name, completion) in &summary_for_file {
+                if !completion.is_empty() {
+                    message.push_str(&format!("[{file_name}]\n{completion}\n"));
+                }
             }
         }
 
@@ -156,10 +162,10 @@ impl SummarizationClient {
             &self.prompt_translation,
             HashMap::from([
                 ("commit_message", commit_message),
-                ("output_language", &self.prompt_lang),
+                ("output_language", &self.output_lang.to_string()),
             ]),
         )?;
-        if self.prompt_lang != "English" {
+        if self.output_lang != Language::En {
             let completion = self.client.completions(&prompt).await;
             completion
         } else {
