@@ -24,14 +24,14 @@ The output should be easily readable. When in doubt, write less comments and not
 Readability is top priority. Write only the most important comments about the diff.
 
 EXAMPLE SUMMARY COMMENTS:
-```
+###
 - Raise the amount of returned recordings from `10` to `100`
 - Fix a typo in the github action name
 - Move the `octokit` initialization to a separate file
 - Add an OpenAI API for completions
 - Lower numeric tolerance for test files
 - Add 2 tests for the inclusive string split function
-```
+###
 Most commits will have less comments than this examples list.
 The last comment does not include the file names,
 because there were more than two relevant files in the hypothetical commit.
@@ -40,9 +40,9 @@ It is given only as an example of appropriate comments.
 
 
 THE GIT DIFF TO BE SUMMARIZED:
-```
+###
 {{ file_diff }}
-```
+###
 
 THE SUMMARY:
 
