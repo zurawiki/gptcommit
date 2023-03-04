@@ -7,6 +7,7 @@ use crate::settings::Settings;
 use crate::util;
 use crate::{prompt::format_prompt, settings::Language};
 use anyhow::Result;
+
 use tokio::task::JoinSet;
 use tokio::try_join;
 #[derive(Debug, Clone)]
@@ -15,9 +16,11 @@ pub(crate) struct SummarizationClient {
 
     file_ignore: Vec<String>,
     prompt_file_diff: String,
+    prompt_conventional_commit_prefix: String,
     prompt_commit_summary: String,
     prompt_commit_title: String,
     prompt_translation: String,
+    output_conventional_commit: bool,
     output_lang: Language,
     output_show_per_file_summary: bool,
 }
@@ -27,11 +30,15 @@ impl SummarizationClient {
         let prompt_settings = settings.prompt.unwrap_or_default();
 
         let prompt_file_diff = prompt_settings.file_diff.unwrap_or_default();
+        let prompt_conventional_commit_prefix = prompt_settings
+            .conventional_commit_prefix
+            .unwrap_or_default();
         let prompt_commit_summary = prompt_settings.commit_summary.unwrap_or_default();
         let prompt_commit_title = prompt_settings.commit_title.unwrap_or_default();
         let prompt_translation = prompt_settings.translation.unwrap_or_default();
 
         let output_settings = settings.output.unwrap_or_default();
+        let output_conventional_commit = output_settings.conventional_commit.unwrap_or(true);
         let output_lang =
             Language::from_str(&output_settings.lang.unwrap_or_default()).unwrap_or_default();
         let output_show_per_file_summary = output_settings.show_per_file_summary.unwrap_or(false);
@@ -40,11 +47,13 @@ impl SummarizationClient {
             client: client.into(),
             file_ignore,
             prompt_file_diff,
+            prompt_conventional_commit_prefix,
             prompt_commit_summary,
             prompt_commit_title,
             prompt_translation,
             output_lang,
             output_show_per_file_summary,
+            output_conventional_commit,
         })
     }
 
@@ -70,14 +79,27 @@ impl SummarizationClient {
             .collect::<Vec<String>>()
             .join("\n");
 
-        let (title, completion) = try_join!(
-            self.commit_title(summary_points),
-            self.commit_summary(summary_points)
-        )?;
-
         let mut message = String::with_capacity(1024);
 
-        message.push_str(&format!("{title}\n\n{completion}\n\n"));
+        if self.output_conventional_commit {
+            let (title, completion, conventional_commit_prefix) = try_join!(
+                self.commit_title(summary_points),
+                self.commit_summary(summary_points),
+                self.conventional_commit_prefix(summary_points),
+            )?;
+
+            if !conventional_commit_prefix.is_empty() {
+                message.push_str(&format!("{conventional_commit_prefix}: "));
+            }
+            message.push_str(&format!("{title}\n\n{completion}\n\n"));
+        } else {
+            let (title, completion) = try_join!(
+                self.commit_title(summary_points),
+                self.commit_summary(summary_points),
+            )?;
+            message.push_str(&format!("{title}\n\n{completion}\n\n"));
+        }
+
         if self.output_show_per_file_summary {
             for (file_name, completion) in &summary_for_file {
                 if !completion.is_empty() {
@@ -135,6 +157,21 @@ impl SummarizationClient {
 
         let completion = self.client.completions(&prompt).await;
         completion
+    }
+
+    // TODO use option type and enum here
+    pub(crate) async fn conventional_commit_prefix(&self, summary_points: &str) -> Result<String> {
+        let prompt = format_prompt(
+            &self.prompt_conventional_commit_prefix,
+            HashMap::from([("summary_points", summary_points)]),
+        )?;
+
+        let completion = self.client.completions(&prompt).await?;
+        match completion.to_ascii_lowercase().trim() {
+            "build" | "chore" | "ci" | "docs" | "feat" | "fix" | "perf" | "refactor" | "style"
+            | "test" => Ok(completion.to_string()),
+            _ => Ok("".to_string()),
+        }
     }
 
     pub(crate) async fn commit_summary(&self, summary_points: &str) -> Result<String> {
