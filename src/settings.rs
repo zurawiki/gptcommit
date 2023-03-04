@@ -16,8 +16,8 @@ use strum_macros::{Display, IntoStaticStr};
 use crate::{
     git::get_hooks_path,
     prompt::{
-        PROMPT_TO_SUMMARIZE_DIFF, PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES,
-        PROMPT_TO_SUMMARIZE_DIFF_TITLE, PROMPT_TO_TRANSLATE,
+        PROMPT_TO_CONVENTIONAL_COMMIT_PREFIX, PROMPT_TO_SUMMARIZE_DIFF,
+        PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES, PROMPT_TO_SUMMARIZE_DIFF_TITLE, PROMPT_TO_TRANSLATE,
     },
 };
 
@@ -89,9 +89,10 @@ impl From<OpenAISettings> for config::ValueKind {
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub(crate) struct PromptSettings {
-    pub file_diff: Option<String>,
+    pub conventional_commit_prefix: Option<String>,
     pub commit_summary: Option<String>,
     pub commit_title: Option<String>,
+    pub file_diff: Option<String>,
     pub translation: Option<String>,
 }
 
@@ -99,9 +100,10 @@ pub(crate) struct PromptSettings {
 impl From<PromptSettings> for config::ValueKind {
     fn from(settings: PromptSettings) -> Self {
         let mut properties = HashMap::new();
+
         properties.insert(
-            "file_diff".to_string(),
-            config::Value::from(settings.file_diff),
+            "conventional_commit_prefix".to_string(),
+            config::Value::from(settings.conventional_commit_prefix),
         );
         properties.insert(
             "commit_summary".to_string(),
@@ -110,6 +112,10 @@ impl From<PromptSettings> for config::ValueKind {
         properties.insert(
             "commit_title".to_string(),
             config::Value::from(settings.commit_title),
+        );
+        properties.insert(
+            "file_diff".to_string(),
+            config::Value::from(settings.file_diff),
         );
         properties.insert(
             "translation".to_string(),
@@ -139,6 +145,8 @@ pub enum Language {
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct OutputSettings {
+    /// Whether to add a conventional commit tag to the commit message
+    pub conventional_commit: Option<bool>,
     /// Output language of the commit message
     pub lang: Option<String>,
     /// Whether to show the summary of each file in the commit
@@ -149,6 +157,10 @@ pub struct OutputSettings {
 impl From<OutputSettings> for config::ValueKind {
     fn from(settings: OutputSettings) -> Self {
         let mut properties = HashMap::new();
+        properties.insert(
+            "conventional_commit".to_string(),
+            config::Value::from(settings.conventional_commit),
+        );
         properties.insert("lang".to_string(), config::Value::from(settings.lang));
         properties.insert(
             "show_per_file_summary".to_string(),
@@ -214,6 +226,9 @@ impl Settings {
             .set_default(
                 "prompt",
                 Some(PromptSettings {
+                    conventional_commit_prefix: Some(
+                        PROMPT_TO_CONVENTIONAL_COMMIT_PREFIX.to_string(),
+                    ),
                     file_diff: Some(PROMPT_TO_SUMMARIZE_DIFF.to_string()),
                     commit_summary: Some(PROMPT_TO_SUMMARIZE_DIFF_SUMMARIES.to_string()),
                     commit_title: Some(PROMPT_TO_SUMMARIZE_DIFF_TITLE.to_string()),
@@ -223,6 +238,7 @@ impl Settings {
             .set_default(
                 "output",
                 Some(OutputSettings {
+                    conventional_commit: Some(true),
                     lang: Some("en".to_string()),
                     show_per_file_summary: Some(false),
                 }),
