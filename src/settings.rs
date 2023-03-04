@@ -119,9 +119,10 @@ impl From<PromptSettings> for config::ValueKind {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Display, EnumString, IntoStaticStr)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Display, EnumString, IntoStaticStr)]
 #[strum(serialize_all = "kebab-case")]
 pub enum Language {
+    #[default]
     #[strum(serialize = "en")]
     #[strum(to_string = "English")]
     En,
@@ -138,7 +139,10 @@ pub enum Language {
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct OutputSettings {
+    /// Output language of the commit message
     pub lang: Option<String>,
+    /// Whether to show the summary of each file in the commit
+    pub show_per_file_summary: Option<bool>,
 }
 
 // implement the trait `From<OutputSettings>` for `ValueKind`
@@ -146,6 +150,10 @@ impl From<OutputSettings> for config::ValueKind {
     fn from(settings: OutputSettings) -> Self {
         let mut properties = HashMap::new();
         properties.insert("lang".to_string(), config::Value::from(settings.lang));
+        properties.insert(
+            "show_per_file_summary".to_string(),
+            config::Value::from(settings.show_per_file_summary),
+        );
         Self::Table(properties)
     }
 }
@@ -216,6 +224,7 @@ impl Settings {
                 "output",
                 Some(OutputSettings {
                     lang: Some("en".to_string()),
+                    show_per_file_summary: Some(false),
                 }),
             )?;
 
