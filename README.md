@@ -130,6 +130,19 @@ Because the githook detected the user is supplying their own template, we make s
 
 You can allow gptcommit to summarize amended commits with the following configuration above.
 
+### Installing in GitHub codespaces
+
+You'll need to install Rust and the cargo toolchain first. Remember to configure your API key.
+
+```sh
+curl https://sh.rustup.rs -sSf | sh
+bash
+cargo install --locked gptcommit
+
+# insert your openai api key https://platform.openai.com/account/api-keys
+gptcommit config set openai.api_key # sk-...
+```
+
 ## Derived Works
 
 All of these awesome projects are built using  `gptcommit`.
