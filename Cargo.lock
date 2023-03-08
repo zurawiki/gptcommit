@@ -1975,9 +1975,9 @@ dependencies = [
 
 [[package]]
 name = "tera"
-version = "1.17.1"
+version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3df578c295f9ec044ff1c829daf31bb7581d5b3c2a7a3d87419afe1f2531438c"
+checksum = "27df4164dd125228af4c90c9799a29740e39151767d579f3fc711491054a0378"
 dependencies = [
  "globwalk",
  "lazy_static",
@@ -1986,6 +1986,7 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
+ "thread_local",
  "unic-segment",
 ]
 
@@ -2020,11 +2021,10 @@ dependencies = [
 
 [[package]]
 name = "thread_local"
-version = "1.1.7"
+version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fdd6f064ccff2d6567adcb3873ca630700f00b5ad3f060c25b5dcfd9a4ce152"
+checksum = "5516c27b78311c50bf42c071425c560ac799b11c30b31f87e3081965fe5e0180"
 dependencies = [
- "cfg-if",
  "once_cell",
 ]
 
