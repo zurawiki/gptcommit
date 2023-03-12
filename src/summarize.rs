@@ -155,8 +155,7 @@ impl SummarizationClient {
             HashMap::from([("file_diff", file_diff)]),
         )?;
 
-        let completion = self.client.completions(&prompt).await;
-        completion
+        self.client.completions(&prompt).await
     }
 
     // TODO use option type and enum here
@@ -180,8 +179,7 @@ impl SummarizationClient {
             HashMap::from([("summary_points", summary_points)]),
         )?;
 
-        let completion = self.client.completions(&prompt).await;
-        completion
+        self.client.completions(&prompt).await
     }
 
     pub(crate) async fn commit_title(&self, summary_points: &str) -> Result<String> {
@@ -190,8 +188,7 @@ impl SummarizationClient {
             HashMap::from([("summary_points", summary_points)]),
         )?;
 
-        let completion = self.client.completions(&prompt).await;
-        completion
+        self.client.completions(&prompt).await
     }
 
     pub(crate) async fn commit_translate(&self, commit_message: &str) -> Result<String> {
@@ -203,8 +200,7 @@ impl SummarizationClient {
             ]),
         )?;
         if self.output_lang != Language::En {
-            let completion = self.client.completions(&prompt).await;
-            completion
+            self.client.completions(&prompt).await
         } else {
             Ok(commit_message.to_string())
         }

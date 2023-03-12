@@ -21,20 +21,16 @@ use crate::util::SplitPrefixInclusive;
 
 use crate::llms::tester_foobar::FooBarClient;
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, ValueEnum)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, ValueEnum, Default)]
 enum CommitSource {
     #[clap(name = "")]
+    #[default]
     Empty,
     Message,
     Template,
     Merge,
     Squash,
     Commit,
-}
-impl Default for CommitSource {
-    fn default() -> Self {
-        CommitSource::Empty
-    }
 }
 
 #[derive(Args, Debug)]
