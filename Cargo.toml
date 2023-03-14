@@ -18,7 +18,7 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.69"
-async-openai = "0.9.2"
+async-openai = "0.9.4"
 async-std = "1.12.0"
 async-trait = "0.1.66"
 backoff = "0.4.0"
@@ -31,16 +31,16 @@ log = "0.4.17"
 regex = "1.7.1"
 reqwest = { version = "0.11.14", features = ["json", "gzip", "brotli", "rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
-serde_derive = "1.0.152"
+serde_derive = "1.0.155"
 serde_json = "1.0.94"
 simple_logger = "4.0.0"
 strum = "0.24.1"
 strum_macros = "0.24.3"
 tera = { version = "1.18.0", default-features = false }
-tiktoken-rs = "0.1.4"
+tiktoken-rs = "0.2.1"
 tokio = { version = "1.26.0", features = ["full"] }
-toml = "0.7.2"
-toml_edit = "0.19.4"
+toml = "0.7.3"
+toml_edit = "0.19.6"
 which = "4.4.0"
 
 [dev-dependencies]
