@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail, Result};
 
 use async_trait::async_trait;
 
-use tiktoken_rs::tiktoken::{p50k_base, CoreBPE};
+use tiktoken_rs::{p50k_base, CoreBPE};
 
 use crate::settings::OpenAISettings;
 use async_openai::{
@@ -126,6 +126,7 @@ impl LlmClient for OpenAIClient {
         lazy_static! {
             static ref BPE_TOKENIZER: CoreBPE = p50k_base().unwrap();
         }
+        // TODO adjust token counting
         let n_tokens = 100;
 
         let tokens = BPE_TOKENIZER.encode_with_special_tokens(prompt);
