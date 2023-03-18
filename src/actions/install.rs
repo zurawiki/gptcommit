@@ -17,7 +17,7 @@ pub(crate) async fn main(settings: Settings) -> Result<()> {
     println!("{}", "Installing gptcommit hook...".green().bold());
 
     find_executable("git", "To use gptcommit, you must have git on your PATH")?;
-    find_executable("gptcommit", " To use gptcommit, you must have gptcommit on your PATH. Install with `cargo install gptcommit`")?;
+    find_executable("gptcommit", " To use gptcommit, you must have gptcommit on your PATH. Install with `cargo install --locked gptcommit`")?;
 
     // confirm in git root
     let hooks_path = get_hooks_path()?;
