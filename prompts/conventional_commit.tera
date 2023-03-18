@@ -1,4 +1,4 @@
-You are an expert programmer, and you are trying to summarize a code change.
+You are an expert programmer summarizing a code change.
 You went over every file that was changed in it.
 For some of these files changes where too big and were omitted in the files diff summary.
 Determine the best label for the commit.
