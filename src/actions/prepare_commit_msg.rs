@@ -21,6 +21,7 @@ use crate::util::SplitPrefixInclusive;
 
 use crate::llms::tester_foobar::FooBarClient;
 
+/// Enum representing the possible commit message sources
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, ValueEnum, Default)]
 enum CommitSource {
     #[clap(name = "")]
@@ -33,6 +34,7 @@ enum CommitSource {
     Commit,
 }
 
+/// Arguments for the PrepareCommitMsg action
 #[derive(Args, Debug)]
 pub(crate) struct PrepareCommitMsgArgs {
     /// Name of the file that has the commit message
@@ -51,7 +53,6 @@ pub(crate) struct PrepareCommitMsgArgs {
     #[arg(long)]
     git_diff_content: Option<PathBuf>,
 }
-
 fn get_llm_client(settings: &Settings) -> Box<dyn LlmClient> {
     match settings {
         Settings {
@@ -78,11 +79,13 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
     match (args.commit_source, settings.allow_amend) {
         (CommitSource::Empty, _) | (CommitSource::Commit, Some(true)) => {}
         (CommitSource::Commit, _) => {
-            println!("🤖 Skipping gptcommit because commit is being amended");
+            println!("🤖 Skipping gptcommit since we're amending a commit. Change this behavior with `gptcommit config set allow_amend true`");
             return Ok(());
         }
         _ => {
-            println!("🤖 Skipping gptcommit because githook is not run on commit");
+            println!(
+                "🤖 Skipping gptcommit because the githook isn't set up for this commit mode."
+            );
             return Ok(());
         }
     };
@@ -90,7 +93,12 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
     let client = get_llm_client(&settings);
     let summarization_client = SummarizationClient::new(settings.to_owned(), client)?;
 
-    println!("{}", "🤖 Asking GPT-3 to summarize diffs...".green().bold());
+    println!(
+        "{}",
+        "🤖 Let's ask OpenAI to summarize those diffs! 🚀"
+            .green()
+            .bold()
+    );
 
     let output = if let Some(git_diff_output) = args.git_diff_content {
         fs::read_to_string(git_diff_output)?

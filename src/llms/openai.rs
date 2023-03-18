@@ -26,11 +26,11 @@ impl OpenAIClient {
     pub(crate) fn new(settings: OpenAISettings) -> Result<Self, anyhow::Error> {
         let api_key = settings.api_key.unwrap_or_default();
         if api_key.is_empty() {
-            bail!("No OpenAI API key found.")
+            bail!("No OpenAI API key found. Please provide a valid API key.");
         }
         let model = settings.model.unwrap_or_default();
         if model.is_empty() {
-            bail!("No OpenAI model configured.")
+            bail!("No OpenAI model configured. Please choose a valid model to use.");
         }
 
         let mut client = Client::new().with_api_key(&api_key);
@@ -54,7 +54,7 @@ impl OpenAIClient {
 
         if prompt_token_limit < COMPLETION_TOKEN_LIMIT {
             let error_msg =
-                "skipping... diff is too large for the model. Consider using a model with a larger context window.".to_string();
+"Skipping... The diff is too large for the current model. Consider using a model with a larger context window.".to_string();
             warn!("{}", error_msg);
             bail!(error_msg)
         }
@@ -80,7 +80,7 @@ impl OpenAIClient {
         let completion = response
             .choices
             .first()
-            .ok_or(anyhow!("No completion results"))
+            .ok_or(anyhow!("No completion results returned from OpenAI."))
             .map(|c| c.text.clone());
 
         completion
@@ -116,7 +116,7 @@ impl OpenAIClient {
             return Ok(choice.message.content);
         }
 
-        bail!("No completion results")
+        bail!("No completion results returned from OpenAI.")
     }
 }
 

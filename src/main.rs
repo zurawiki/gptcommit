@@ -21,17 +21,20 @@ use log::LevelFilter;
 use settings::Settings;
 use simple_logger::SimpleLogger;
 
+/// Represents the main command-line interface for the application.
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 struct Cli {
+    /// The action to perform (subcommand).
     #[command(subcommand)]
     action: Action,
-    /// Enable verbose logging
+    /// Enable verbose logging.
     #[arg(short, long, global = true)]
     verbose: bool,
 }
 
+/// Actions the application can perform.
 #[derive(Subcommand, Debug)]
 enum Action {
     /// Install the git hook

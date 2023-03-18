@@ -38,7 +38,7 @@ gptcommit install
 
 ## Usage
 
-To use `gptcommit`, simply run `git commit` as you normally would. The hook will automatically generate a commit message for you using GPT-3. If you're not satisfied with the generated message, you can always edit it before committing.
+To use `gptcommit`, simply run `git commit` as you normally would. The hook will automatically generate a commit message for you using a large language model like GPT. If you're not satisfied with the generated message, you can always edit it before committing.
 
 Note: By default, `gptcommit` uses the GPT-3 model. Please ensure you have sufficient credits in your OpenAI account to use it.
 
@@ -47,9 +47,9 @@ Note: By default, `gptcommit` uses the GPT-3 model. Please ensure you have suffi
 `gptcommit` supports a number of configuration options that are read from `$HOME/.config/gptcommit/config.toml`.
 Configs are applied in the following order:
 
-- User settings as read from `$HOME/.config/gptcommit/config.toml`.
-- The settings as read from the repo clone at `$GIT_ROOT/.git/gptcommit.toml`.
-- Environment variables starting with `GPTCOMMIT__*`.
+-   User settings as read from `$HOME/.config/gptcommit/config.toml`.
+-   The settings as read from the repo clone at `$GIT_ROOT/.git/gptcommit.toml`.
+-   Environment variables starting with `GPTCOMMIT__*`.
 
 See all the config options available with `gptcommit config keys`.
 
@@ -115,8 +115,8 @@ OpenAI Completions are billed by "tokens" that are both sent and generated. Pric
 
 Today, I see two low-hanging solutions for reducing cost:
 
-- Switch to a different model using the openai.model configuration option
-- Reduce the side of prompts and diff data sent to OpenAI
+-   Switch to a different model using the openai.model configuration option
+-   Reduce the side of prompts and diff data sent to OpenAI
 
 OpenAI's pricing page can be found at
 <https://openai.com/api/pricing/#faq-completions-pricing>
@@ -145,10 +145,10 @@ gptcommit config set openai.api_key # sk-...
 
 ## Derived Works
 
-All of these awesome projects are built using  `gptcommit`.
+All of these awesome projects are built using `gptcommit`.
 
-- A VSCode extension you can
-  [install here](https://marketplace.visualstudio.com/items?itemName=pwwang.gptcommit) | [GitHub](https://github.com/pwwang/vscode-gptcommit)
+-   A VSCode extension you can
+    [install here](https://marketplace.visualstudio.com/items?itemName=pwwang.gptcommit) | [GitHub](https://github.com/pwwang/vscode-gptcommit)
 
 ## Encountered any bugs?
 

@@ -21,7 +21,7 @@ pub(crate) fn run_command(cmd: &str, args: &[&str]) -> Result<String> {
 pub(crate) fn find_executable(name: &str, error_msg: &str) -> Result<PathBuf> {
     let path = which(name).map_err(|_| {
         anyhow!(
-            "Could not find `{}` executable in PATH. {}",
+            "The `{}` executable could not be found in your PATH. {}",
             name,
             error_msg
         )
