@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail, Result};
 
 use async_trait::async_trait;
 
-use tiktoken_rs::{p50k_base, CoreBPE};
+use tiktoken_rs::{get_chat_completion_max_tokens, get_completion_max_tokens};
 
 use crate::settings::OpenAISettings;
 use async_openai::{
@@ -14,6 +14,7 @@ use async_openai::{
 };
 
 use super::llm_client::LlmClient;
+const COMPLETION_TOKEN_LIMIT: usize = 100;
 
 #[derive(Clone, Debug)]
 pub(crate) struct OpenAIClient {
@@ -43,29 +44,25 @@ impl OpenAIClient {
         Ok(Self { model, client })
     }
 
-    pub(crate) fn get_prompt_token_limit_for_model(&self) -> usize {
-        match self.model.as_str() {
-            "text-davinci-003" => 4000,
-            "text-davinci-002" => 4000,
-            "text-curie-001" => 2048,
-            "text-babbage-001" => 2048,
-            "text-ada-001" => 2048,
-            "code-davinci-002" => 4000,
-            "code-cushman-001" => 2048,
-            _ => 4096,
-        }
-    }
-
     pub(crate) fn should_use_chat_completion(model: &str) -> bool {
-        model.to_lowercase().starts_with("gpt-3.5-turbo")
+        model.to_lowercase().starts_with("gpt-4")
+            || model.to_lowercase().starts_with("gpt-3.5-turbo")
     }
 
-    pub(crate) async fn get_completions(&self, prompt: &str, output_length: u16) -> Result<String> {
+    pub(crate) async fn get_completions(&self, prompt: &str) -> Result<String> {
+        let prompt_token_limit = get_completion_max_tokens(&self.model, prompt)?;
+
+        if prompt_token_limit < COMPLETION_TOKEN_LIMIT {
+            let error_msg =
+                "skipping... diff is too large for the model. Consider using a model with a larger context window.".to_string();
+            warn!("{}", error_msg);
+            bail!(error_msg)
+        }
         // Create request using builder pattern
         let request = CreateCompletionRequestArgs::default()
             .model(&self.model)
             .prompt(prompt)
-            .max_tokens(output_length)
+            .max_tokens(prompt_token_limit as u16)
             .temperature(0.5)
             .top_p(1.)
             .frequency_penalty(0.)
@@ -89,17 +86,23 @@ impl OpenAIClient {
         completion
     }
 
-    pub(crate) async fn get_chat_completions(
-        &self,
-        prompt: &str,
-        _output_length: u16,
-    ) -> Result<String> {
+    pub(crate) async fn get_chat_completions(&self, prompt: &str) -> Result<String> {
+        let messages = [ChatCompletionRequestMessageArgs::default()
+            .role(Role::User)
+            .content(prompt)
+            .build()?];
+        let prompt_token_limit = get_chat_completion_max_tokens(&self.model, &messages)?;
+
+        if prompt_token_limit < COMPLETION_TOKEN_LIMIT {
+            let error_msg =
+                "skipping... diff is too large for the model. Consider using a model with a larger context window.".to_string();
+            warn!("{}", error_msg);
+            bail!(error_msg)
+        }
+
         let request = CreateChatCompletionRequestArgs::default()
             .model(&self.model)
-            .messages([ChatCompletionRequestMessageArgs::default()
-                .role(Role::User)
-                .content(prompt)
-                .build()?])
+            .messages(messages)
             .build()?;
 
         let response = self.client.chat().create(request).await?;
@@ -122,25 +125,10 @@ impl LlmClient for OpenAIClient {
     /// Sends a request to OpenAI's API to get a text completion.
     /// It takes a prompt as input, and returns the completion.
     async fn completions(&self, prompt: &str) -> Result<String> {
-        let prompt_token_limit = self.get_prompt_token_limit_for_model();
-        lazy_static! {
-            static ref BPE_TOKENIZER: CoreBPE = p50k_base().unwrap();
-        }
-        // TODO adjust token counting
-        let n_tokens = 100;
-
-        let tokens = BPE_TOKENIZER.encode_with_special_tokens(prompt);
-        let prompt_token_count = tokens.len();
-        if prompt_token_count + n_tokens > prompt_token_limit {
-            let error_msg =
-                format!("skipping... token count: {prompt_token_count} < {prompt_token_limit}");
-            warn!("{}", error_msg);
-            bail!(error_msg)
-        }
         if OpenAIClient::should_use_chat_completion(&self.model) {
-            self.get_chat_completions(prompt, n_tokens as u16).await
+            self.get_chat_completions(prompt).await
         } else {
-            self.get_completions(prompt, n_tokens as u16).await
+            self.get_completions(prompt).await
         }
     }
 }

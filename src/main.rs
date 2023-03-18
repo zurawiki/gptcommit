@@ -1,8 +1,6 @@
 use actions::{config::ConfigArgs, prepare_commit_msg::PrepareCommitMsgArgs};
 
 #[macro_use]
-extern crate lazy_static;
-#[macro_use]
 extern crate log;
 mod cmd;
 mod git;
