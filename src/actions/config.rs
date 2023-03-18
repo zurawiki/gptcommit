@@ -9,37 +9,40 @@ use crate::{
 };
 use anyhow::{bail, Result};
 
+/// Actions related to application configuration.
 #[derive(Subcommand, Debug)]
 pub(crate) enum ConfigAction {
     /// List all config keys
     Keys,
     /// List all config values
     List {
-        /// if set, will save the config to the user's config file
+        /// If set, will save the config to the user's config file
         #[clap(long)]
         save: bool,
     },
-    /// Read config value
+    /// Read a config value
     Get { key: String },
-    /// Set config value
+    /// Set a config value
     Set {
         key: String,
         value: String,
-        /// if set, modifies the local config. Default behavior modifies global config
+        /// If set, modifies the local config. Default behavior modifies global config
         #[clap(long)]
         local: bool,
     },
-    /// Clear config value
+    /// Clear a config value
     Delete {
         key: String,
-        /// if set, modifies the local config. Default behavior modifies global config
+        /// If set, modifies the local config. Default behavior modifies global config
         #[clap(long)]
         local: bool,
     },
 }
 
+/// Configuration-related command-line arguments
 #[derive(Args, Debug)]
 pub(crate) struct ConfigArgs {
+    /// The action to perform (subcommand)
     #[command(subcommand)]
     action: ConfigAction,
 }
@@ -61,12 +64,12 @@ fn get_config_path(local: bool) -> Result<PathBuf> {
         if let Some(config_path) = get_local_config_path() {
             Ok(config_path)
         } else {
-            bail!("No repo-local config found. Please run `git init` to create a repo first");
+            bail!("No local repository configuration found. Please run `git init` to create a repository first.");
         }
     } else if let Some(config_path) = get_user_config_path() {
         Ok(config_path)
     } else {
-        bail!("No user config found.");
+        bail!("No user configuration found.");
     }
 }
 
@@ -113,14 +116,14 @@ async fn get(settings: Settings, full_key: String) -> Result<()> {
             node = child_config;
             path.pop_front();
         } else {
-            bail!("Config key {} not found", full_key);
+            bail!("Configuration key '{}' not found.", full_key);
         }
     }
 
     if path.is_empty() {
         println!("{}", node.as_str().unwrap_or(""));
     } else {
-        bail!("Config key {} not found", full_key);
+        bail!("Configuration key '{}' not found.", full_key);
     }
     Ok(())
 }
@@ -129,7 +132,8 @@ async fn list(settings: Settings, save: bool) -> Result<()> {
     let toml_string = toml::to_string_pretty(&settings).unwrap();
     println!("{toml_string}");
     if save {
-        let user_config_path = get_user_config_path().expect("Could not find user config path");
+        let user_config_path =
+            get_user_config_path().expect("Could not find user configuration path");
         fs::write(&user_config_path, toml_string)?;
         println!("Config saved to {}", user_config_path.display());
     }
