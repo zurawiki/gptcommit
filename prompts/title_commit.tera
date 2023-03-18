@@ -1,7 +1,7 @@
-You are an expert programmer, and you are trying to title a pull request.
+You are an expert programmer writing a commit message title.
 You went over every file that was changed in it.
-For some of these files changes were too big and were omitted in the files diff summary.
-Please summarize the pull request into a single specific theme.
+Some of these files changes were too big, and were omitted in the summaries below.
+Please summarize the commit into a single specific and cohesive theme.
 Write your response using the imperative tense following the kernel git commit style guide.
 Write a high level title.
 Do not repeat the commit summaries or the file summaries.
@@ -16,9 +16,9 @@ Schedule all GitHub actions on all OSs
 ```
 
 THE FILE SUMMARIES:
-###
+```
 {{ summary_points }}
-###
+```
 
 Remember to write only one line, no more than 50 characters.
-THE PULL REQUEST TITLE:
+THE COMMIT MESSAGE TITLE:
