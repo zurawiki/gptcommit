@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Ok, Result};
 
 use async_trait::async_trait;
 
@@ -125,10 +125,11 @@ impl LlmClient for OpenAIClient {
     /// Sends a request to OpenAI's API to get a text completion.
     /// It takes a prompt as input, and returns the completion.
     async fn completions(&self, prompt: &str) -> Result<String> {
-        if OpenAIClient::should_use_chat_completion(&self.model) {
-            self.get_chat_completions(prompt).await
+        let completion = if OpenAIClient::should_use_chat_completion(&self.model) {
+            self.get_chat_completions(prompt).await?
         } else {
-            self.get_completions(prompt).await
-        }
+            self.get_completions(prompt).await?
+        };
+        Ok(completion.trim().to_string())
     }
 }
