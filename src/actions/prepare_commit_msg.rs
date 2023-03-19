@@ -4,6 +4,7 @@ use clap::ValueEnum;
 use colored::Colorize;
 
 use clap::Args;
+use strum_macros::Display;
 
 use std::fs;
 
@@ -22,7 +23,7 @@ use crate::util::SplitPrefixInclusive;
 use crate::llms::tester_foobar::FooBarClient;
 
 /// Enum representing the possible commit message sources
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, ValueEnum, Default)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Display, ValueEnum, Default)]
 enum CommitSource {
     #[clap(name = "")]
     #[default]
@@ -84,7 +85,7 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
         }
         _ => {
             println!(
-                "🤖 Skipping gptcommit because the githook isn't set up for this commit mode."
+                "🤖 Skipping gptcommit because the githook isn't set up for the \"{}\" commit mode.", args.commit_source
             );
             return Ok(());
         }
