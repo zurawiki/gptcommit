@@ -71,6 +71,7 @@ impl<'de> serde::Deserialize<'de> for ModelProvider {
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub(crate) struct OpenAISettings {
+    pub api_base: Option<String>,
     pub api_key: Option<String>,
     pub model: Option<String>,
     pub retries: Option<u16>,
@@ -80,6 +81,7 @@ pub(crate) struct OpenAISettings {
 impl From<OpenAISettings> for config::ValueKind {
     fn from(settings: OpenAISettings) -> Self {
         let mut properties = HashMap::new();
+        properties.insert("api_base".to_string(), config::Value::from(settings.api_base));
         properties.insert("api_key".to_string(), config::Value::from(settings.api_key));
         properties.insert("model".to_string(), config::Value::from(settings.model));
         properties.insert("retries".to_string(), config::Value::from(settings.retries));
@@ -218,6 +220,7 @@ impl Settings {
             .set_default(
                 "openai",
                 Some(OpenAISettings {
+                    api_base: None,
                     api_key: None,
                     model: Some(DEFAULT_OPENAI_MODEL.to_string()),
                     retries: Some(2),
@@ -281,6 +284,12 @@ impl Settings {
         settings = settings.add_source(app_env);
 
         // add custom override
+        if let Ok(openai_api_base) = std::env::var("OPENAI_API_BASE") {
+            if !openai_api_base.is_empty() {
+                debug!("Applying OPENAI_API_BASE envvar: {}", openai_api_base);
+                settings = settings.set_override("openai.api_base", Some(openai_api_base))?;
+            }
+        }
         if let Ok(openai_api_key) = std::env::var("OPENAI_API_KEY") {
             if !openai_api_key.is_empty() {
                 debug!("Applying OPENAI_API_KEY envvar: {}", openai_api_key);
