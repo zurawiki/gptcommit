@@ -35,6 +35,11 @@ impl OpenAIClient {
 
         let mut client = Client::new().with_api_key(&api_key);
 
+        let api_base = settings.api_base.unwrap_or_default();
+        if !api_base.is_empty() {
+            client = client.with_api_base(&api_base);
+        }
+
         if settings.retries.unwrap_or_default() > 0 {
             let backoff = backoff::ExponentialBackoffBuilder::new()
                 .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
