@@ -81,7 +81,10 @@ pub(crate) struct OpenAISettings {
 impl From<OpenAISettings> for config::ValueKind {
     fn from(settings: OpenAISettings) -> Self {
         let mut properties = HashMap::new();
-        properties.insert("api_base".to_string(), config::Value::from(settings.api_base));
+        properties.insert(
+            "api_base".to_string(),
+            config::Value::from(settings.api_base),
+        );
         properties.insert("api_key".to_string(), config::Value::from(settings.api_key));
         properties.insert("model".to_string(), config::Value::from(settings.model));
         properties.insert("retries".to_string(), config::Value::from(settings.retries));
