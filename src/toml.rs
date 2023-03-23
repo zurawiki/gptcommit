@@ -68,6 +68,25 @@ the-force = { value = "surrounds-you" }
         assert_eq!(visitor.keys, vec!["laputa", "the-force.value"]);
     }
 
+    fn get_config_keys() -> Vec<&'static str> {
+        vec![
+            "allow_amend",
+            "file_ignore",
+            "model_provider",
+            "openai.api_base",
+            "openai.api_key",
+            "openai.model",
+            "openai.retries",
+            "output.conventional_commit",
+            "output.lang",
+            "output.show_per_file_summary",
+            "prompt.commit_summary",
+            "prompt.commit_title",
+            "prompt.conventional_commit_prefix",
+            "prompt.file_diff",
+            "prompt.translation",
+        ]
+    }
     #[test]
     fn test_default_config() {
         let input = toml::to_string_pretty(&Settings::new().unwrap()).unwrap();
@@ -79,49 +98,13 @@ the-force = { value = "surrounds-you" }
         assert_eq!(visitor.current_path, Vec::<&str>::new());
         visitor.keys.dedup();
         visitor.keys.sort();
-        assert_eq!(
-            visitor.keys,
-            vec![
-                "allow_amend",
-                "file_ignore",
-                "model_provider",
-                "openai.api_key",
-                "openai.model",
-                "openai.retries",
-                "output.conventional_commit",
-                "output.lang",
-                "output.show_per_file_summary",
-                "prompt.commit_summary",
-                "prompt.commit_title",
-                "prompt.conventional_commit_prefix",
-                "prompt.file_diff",
-                "prompt.translation",
-            ]
-        );
+        assert_eq!(visitor.keys, get_config_keys());
     }
 
     #[test]
     fn test_get_keys() {
         let input = toml::to_string_pretty(&Settings::new().unwrap()).unwrap();
 
-        assert_eq!(
-            DeepKeysCollector::get_keys(input),
-            vec![
-                "allow_amend",
-                "file_ignore",
-                "model_provider",
-                "openai.api_key",
-                "openai.model",
-                "openai.retries",
-                "output.conventional_commit",
-                "output.lang",
-                "output.show_per_file_summary",
-                "prompt.commit_summary",
-                "prompt.commit_title",
-                "prompt.conventional_commit_prefix",
-                "prompt.file_diff",
-                "prompt.translation",
-            ]
-        );
+        assert_eq!(DeepKeysCollector::get_keys(input), get_config_keys());
     }
 }

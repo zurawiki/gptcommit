@@ -71,6 +71,24 @@ You can also config this setting via the `GPTCOMMIT__OPENAI__API_KEY`.
 
 To maintain compatibility with other OpenAI clients, we support the `OPENAI_API_KEY` environment variables. This will take the highest precedence.
 
+### Set a custom OpenAI API base URL
+
+Persist your OpenAI key
+
+```sh
+gptcommit config set openai.api_base https://...
+```
+
+or set it just for you local repo:
+
+```sh
+gptcommit config set --local openai.api_base https://...
+```
+
+You can also config this setting via the `GPTCOMMIT__OPENAI__API_BASE` or .
+
+To maintain compatibility with other OpenAI clients, we support the `OPENAI_API_BASE` environment variables. This will take the highest precedence.
+
 ### Try out a different OpenAI model
 
 `gptcommit` uses `text-davinci-003` by default. The model can be configured to use other models as below
