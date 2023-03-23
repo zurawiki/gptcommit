@@ -4,4 +4,4 @@ updates:
     open-pull-requests-limit: 5
     package-ecosystem: "cargo"
     schedule:
-      interval: "daily"
+      interval: "weekly"
