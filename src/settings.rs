@@ -76,6 +76,7 @@ pub(crate) struct OpenAISettings {
     pub api_key: Option<String>,
     pub model: Option<String>,
     pub retries: Option<u16>,
+    pub proxy: Option<String>,
 }
 
 // implement the trait `From<OpenAISettings>` for `ValueKind`
@@ -89,6 +90,7 @@ impl From<OpenAISettings> for config::ValueKind {
         properties.insert("api_key".to_string(), config::Value::from(settings.api_key));
         properties.insert("model".to_string(), config::Value::from(settings.model));
         properties.insert("retries".to_string(), config::Value::from(settings.retries));
+        properties.insert("proxy".to_string(), config::Value::from(settings.proxy));
         Self::Table(properties)
     }
 }
@@ -228,6 +230,7 @@ impl Settings {
                     api_key: None,
                     model: Some(DEFAULT_OPENAI_MODEL.to_string()),
                     retries: Some(2),
+                    proxy: None,
                 }),
             )?
             .set_default(
