@@ -40,6 +40,13 @@ impl OpenAIClient {
             client = client.with_api_base(&api_base);
         }
 
+        if let Some(proxy) = settings.proxy {
+            let http_client = reqwest::Client::builder()
+                .proxy(reqwest::Proxy::all(proxy)?)
+                .build()?;
+            client = client.with_http_client(http_client);
+        }
+
         if settings.retries.unwrap_or_default() > 0 {
             let backoff = backoff::ExponentialBackoffBuilder::new()
                 .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
