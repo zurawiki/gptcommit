@@ -47,9 +47,9 @@ Note: By default, `gptcommit` uses the GPT-3 model. Please ensure you have suffi
 `gptcommit` supports a number of configuration options that are read from `$HOME/.config/gptcommit/config.toml`.
 Configs are applied in the following order:
 
--   User settings as read from `$HOME/.config/gptcommit/config.toml`.
--   The settings as read from the repo clone at `$GIT_ROOT/.git/gptcommit.toml`.
--   Environment variables starting with `GPTCOMMIT__*`.
+- User settings as read from `$HOME/.config/gptcommit/config.toml`.
+- The settings as read from the repo clone at `$GIT_ROOT/.git/gptcommit.toml`.
+- Environment variables starting with `GPTCOMMIT__*`.
 
 See all the config options available with `gptcommit config keys`.
 
@@ -133,8 +133,8 @@ OpenAI Completions are billed by "tokens" that are both sent and generated. Pric
 
 Today, I see two low-hanging solutions for reducing cost:
 
--   Switch to a different model using the openai.model configuration option
--   Reduce the side of prompts and diff data sent to OpenAI
+- Switch to a different model using the openai.model configuration option
+- Reduce the side of prompts and diff data sent to OpenAI
 
 OpenAI's pricing page can be found at
 <https://openai.com/api/pricing/#faq-completions-pricing>
@@ -165,7 +165,7 @@ gptcommit config set openai.api_key # sk-...
 
 All of these awesome projects are built using `gptcommit`.
 
--   A VSCode extension you can
+- A VSCode extension you can
     [install here](https://marketplace.visualstudio.com/items?itemName=pwwang.gptcommit) | [GitHub](https://github.com/pwwang/vscode-gptcommit)
 
 ## Encountered any bugs?
@@ -175,3 +175,23 @@ If you encounter any bugs or have any suggestions for improvements, please open 
 ## License
 
 This project is licensed under the [MIT License](./LICENSE).
+
+---
+
+# Detailed Help Usage
+
+```
+Usage: gptcommit [OPTIONS] <COMMAND>
+
+Commands:
+  install             Install the git hook
+  uninstall           Uninstall the git hook
+  config              Read and modify settings
+  prepare-commit-msg  Run on the prepare-commit-msg hook
+  help                Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose  Enable verbose logging
+  -h, --help     Print help
+  -V, --version  Print version
+```
