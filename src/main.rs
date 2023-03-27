@@ -1,59 +1,33 @@
-use actions::{config::ConfigArgs, prepare_commit_msg::PrepareCommitMsgArgs};
-
 #[macro_use]
 extern crate log;
+
+mod actions;
+pub mod cli;
 mod cmd;
 mod git;
+mod help;
+mod llms;
 mod prompt;
+mod settings;
 mod summarize;
 mod toml;
 mod util;
 
 use anyhow::Result;
-use clap::{Parser, Subcommand};
-
-mod actions;
-mod help;
-mod llms;
-mod settings;
-
+use clap::Parser;
 use log::LevelFilter;
 use settings::Settings;
 use simple_logger::SimpleLogger;
 
-/// Represents the main command-line interface for the application.
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
-struct Cli {
-    /// The action to perform (subcommand).
-    #[command(subcommand)]
-    action: Action,
-    /// Enable verbose logging.
-    #[arg(short, long, global = true)]
-    verbose: bool,
-}
-
-/// Actions the application can perform.
-#[derive(Subcommand, Debug)]
-enum Action {
-    /// Install the git hook
-    Install,
-    /// Uninstall the git hook
-    Uninstall,
-    /// Read and modify settings
-    Config(ConfigArgs),
-    /// Run on the prepare-commit-msg hook
-    PrepareCommitMsg(PrepareCommitMsgArgs),
-}
+use crate::cli::Action;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let cli = Cli::parse();
-    debug!("CLI args: {:?}", cli);
+    let cli_args = cli::GptcommitCLI::parse();
+    debug!("CLI args: {:?}", cli_args);
 
     SimpleLogger::new()
-        .with_level(if cli.verbose {
+        .with_level(if cli_args.verbose {
             LevelFilter::Debug
         } else {
             LevelFilter::Warn
@@ -64,10 +38,12 @@ async fn main() -> Result<()> {
     let settings = Settings::new()?;
     debug!("Settings: {:?}", settings);
 
-    match cli.action {
-        Action::Config(cli) => actions::config::main(settings, cli).await,
+    match cli_args.action {
+        Action::Config(cli_args) => actions::config::main(settings, cli_args).await,
         Action::Install => actions::install::main(settings).await,
         Action::Uninstall => actions::uninstall::main(settings).await,
-        Action::PrepareCommitMsg(cli) => actions::prepare_commit_msg::main(settings, cli).await,
+        Action::PrepareCommitMsg(cli_args) => {
+            actions::prepare_commit_msg::main(settings, cli_args).await
+        }
     }
 }
