@@ -2,6 +2,7 @@ use std::{collections::HashMap, fs, path::PathBuf, str::FromStr};
 #[cfg(unix)]
 use std::{fs::Permissions, os::unix::prelude::PermissionsExt};
 
+use async_openai::API_BASE;
 use config::{
     builder::DefaultState, Config, ConfigBuilder, ConfigError, Environment, File, Source,
 };
@@ -225,7 +226,7 @@ impl Settings {
             .set_default(
                 "openai",
                 Some(OpenAISettings {
-                    api_base: None,
+                    api_base: Some(API_BASE.to_string()),
                     api_key: None,
                     model: Some(DEFAULT_OPENAI_MODEL.to_string()),
                     retries: Some(2),
