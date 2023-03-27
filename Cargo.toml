@@ -18,16 +18,16 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.70"
-async-openai = "0.10.0"
-async-trait = "0.1.67"
+async-openai = "0.10.1"
+async-trait = "0.1.68"
 backoff = "0.4.0"
-clap = { version = "4.1.11", features = ["derive"] }
+clap = { version = "4.1.13", features = ["derive"] }
 colored = "2.0.0"
 config = { version = "0.13.3", features = ["toml"] }
 dirs = "5.0.0"
 lazy_static = "1.4.0"
 log = "0.4.17"
-regex = "1.7.2"
+regex = "1.7.3"
 reqwest = { version = "0.11.15", features = ["json", "gzip", "brotli", "rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0.158"
