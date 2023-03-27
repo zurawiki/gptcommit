@@ -181,6 +181,7 @@ This project is licensed under the [MIT License](./LICENSE).
 # Detailed Help Usage
 
 ```
+$ gptcommit -h
 Usage: gptcommit [OPTIONS] <COMMAND>
 
 Commands:
@@ -189,6 +190,70 @@ Commands:
   config              Read and modify settings
   prepare-commit-msg  Run on the prepare-commit-msg hook
   help                Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose  Enable verbose logging
+  -h, --help     Print help
+  -V, --version  Print version
+```
+
+```
+$ gptcommit install -h
+Install the git hook
+
+Usage: gptcommit install [OPTIONS]
+
+Options:
+  -v, --verbose  Enable verbose logging
+  -h, --help     Print help
+  -V, --version  Print version
+```
+
+```
+$ gptcommit uninstall -h
+Uninstall the git hook
+
+Usage: gptcommit uninstall [OPTIONS]
+
+Options:
+  -v, --verbose  Enable verbose logging
+  -h, --help     Print help
+  -V, --version  Print version
+```
+
+```
+$ gptcommit config -h
+Read and modify settings
+
+Usage: gptcommit config [OPTIONS] <COMMAND>
+
+Commands:
+  keys    List all config keys
+  list    List all config values
+  get     Read a config value
+  set     Set a config value
+  delete  Clear a config value
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose  Enable verbose logging
+  -h, --help     Print help
+  -V, --version  Print version
+```
+
+```
+$ gptcommit config -h
+Read and modify settings
+
+Usage: gptcommit config [OPTIONS] <COMMAND>
+
+Commands:
+  keys    List all config keys
+  list    List all config values
+  get     Read a config value
+  set     Set a config value
+  delete  Clear a config value
+  help    Print this message or the help of the given subcommand(s)
 
 Options:
   -v, --verbose  Enable verbose logging
