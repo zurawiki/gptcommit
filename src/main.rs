@@ -24,8 +24,6 @@ use crate::cli::Action;
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli_args = cli::GptcommitCLI::parse();
-    debug!("CLI args: {:?}", cli_args);
-
     SimpleLogger::new()
         .with_level(if cli_args.verbose {
             LevelFilter::Debug
@@ -34,6 +32,9 @@ async fn main() -> Result<()> {
         })
         .env()
         .init()?;
+    debug!("gptcommit v{}", env!("CARGO_PKG_VERSION"));
+
+    debug!("CLI args: {:?}", cli_args);
 
     let settings = Settings::new()?;
     debug!("Settings: {:?}", settings);
