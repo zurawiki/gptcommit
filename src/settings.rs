@@ -70,13 +70,29 @@ impl<'de> serde::Deserialize<'de> for ModelProvider {
     }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub(crate) struct OpenAISettings {
     pub api_base: Option<String>,
     pub api_key: Option<String>,
     pub model: Option<String>,
     pub retries: Option<u16>,
     pub proxy: Option<String>,
+}
+
+impl std::fmt::Debug for OpenAISettings {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("OpenAISettings")
+            .field("api_base", &self.api_base)
+            .field(
+                "api_key",
+                // obfuscate the api key
+                &self.api_key.as_ref().map(|_| "********"),
+            )
+            .field("model", &self.model)
+            .field("retries", &self.retries)
+            .field("proxy", &self.proxy)
+            .finish()
+    }
 }
 
 // implement the trait `From<OpenAISettings>` for `ValueKind`
