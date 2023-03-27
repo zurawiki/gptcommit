@@ -41,10 +41,12 @@ impl OpenAIClient {
         }
 
         if let Some(proxy) = settings.proxy {
-            let http_client = reqwest::Client::builder()
-                .proxy(reqwest::Proxy::all(proxy)?)
-                .build()?;
-            client = client.with_http_client(http_client);
+            if !proxy.is_empty() {
+                let http_client = reqwest::Client::builder()
+                    .proxy(reqwest::Proxy::all(proxy)?)
+                    .build()?;
+                client = client.with_http_client(http_client);
+            }
         }
 
         if settings.retries.unwrap_or_default() > 0 {

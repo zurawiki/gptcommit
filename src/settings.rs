@@ -230,7 +230,7 @@ impl Settings {
                     api_key: None,
                     model: Some(DEFAULT_OPENAI_MODEL.to_string()),
                     retries: Some(2),
-                    proxy: None,
+                    proxy: Some("".to_string()),
                 }),
             )?
             .set_default(

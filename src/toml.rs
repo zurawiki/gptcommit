@@ -76,6 +76,7 @@ the-force = { value = "surrounds-you" }
             "openai.api_base",
             "openai.api_key",
             "openai.model",
+            "openai.proxy",
             "openai.retries",
             "output.conventional_commit",
             "output.lang",

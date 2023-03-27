@@ -242,21 +242,21 @@ Options:
 ```
 
 ```
-$ gptcommit config -h
-Read and modify settings
-
-Usage: gptcommit config [OPTIONS] <COMMAND>
-
-Commands:
-  keys    List all config keys
-  list    List all config values
-  get     Read a config value
-  set     Set a config value
-  delete  Clear a config value
-  help    Print this message or the help of the given subcommand(s)
-
-Options:
-  -v, --verbose  Enable verbose logging
-  -h, --help     Print help
-  -V, --version  Print version
+$ gptcommit config keys
+allow_amend
+file_ignore
+model_provider
+openai.api_base
+openai.api_key
+openai.model
+openai.proxy
+openai.retries
+output.conventional_commit
+output.lang
+output.show_per_file_summary
+prompt.commit_summary
+prompt.commit_title
+prompt.conventional_commit_prefix
+prompt.file_diff
+prompt.translation
 ```
