@@ -123,6 +123,14 @@ Now, supported languages are:
 gptcommit config set allow-amend true
 ```
 
+### Proxy configuration support
+
+Configure an OpenAI proxy using
+
+```sh
+gptcommit config set openai.proxy "my_http_proxy...."
+```
+
 ## Common Issues / FAQs
 
 ### How can I reduce my OpenAI usage bill?
@@ -178,7 +186,7 @@ This project is licensed under the [MIT License](./LICENSE).
 
 ---
 
-# Detailed Help Usage
+## Detailed Help Usage
 
 ```
 $ gptcommit -h
