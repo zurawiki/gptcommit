@@ -51,6 +51,7 @@ features = [
     "multipart",
     "rustls-tls",
     "stream",
+    "socks"
 ]
 default-features = false
 
