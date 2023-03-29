@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail, Ok, Result};
 
 use async_trait::async_trait;
 
-use reqwest::Proxy;
+use reqwest::{tls, Proxy};
 use tiktoken_rs::{get_chat_completion_max_tokens, get_completion_max_tokens};
 
 use crate::settings::OpenAISettings;
@@ -39,7 +39,9 @@ impl OpenAIClient {
         let api_base = settings.api_base.unwrap_or_default();
         let mut http_client = reqwest::Client::builder().gzip(true).brotli(true);
         if api_base.is_empty() {
-            http_client = http_client.http2_prior_knowledge();
+            http_client = http_client
+                .http2_prior_knowledge()
+                .min_tls_version(tls::Version::TLS_1_2);
         } else {
             openai_client = openai_client.with_api_base(&api_base);
         }
