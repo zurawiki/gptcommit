@@ -37,15 +37,15 @@ impl OpenAIClient {
         let mut openai_client = Client::new().with_api_key(&api_key);
 
         let api_base = settings.api_base.unwrap_or_default();
-        if !api_base.is_empty() {
+        let mut http_client = reqwest::Client::builder().gzip(true).brotli(true);
+        if api_base.is_empty() {
+            http_client = http_client.http2_prior_knowledge();
+        } else {
             openai_client = openai_client.with_api_base(&api_base);
         }
 
         // Optimized HTTP client
-        let mut http_client = reqwest::Client::builder()
-            .gzip(true)
-            .brotli(true)
-            .http2_prior_knowledge();
+
         if let Some(proxy) = settings.proxy {
             if !proxy.is_empty() {
                 http_client = http_client.proxy(Proxy::all(proxy)?);
