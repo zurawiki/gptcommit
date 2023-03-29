@@ -81,24 +81,13 @@ impl SummarizationClient {
 
         let mut message = String::with_capacity(1024);
 
-        if self.output_conventional_commit {
-            let (title, completion, conventional_commit_prefix) = try_join!(
-                self.commit_title(summary_points),
-                self.commit_summary(summary_points),
-                self.conventional_commit_prefix(summary_points),
-            )?;
+        let (title, completion, conventional_commit_prefix) = try_join!(
+            self.commit_title(summary_points),
+            self.commit_summary(summary_points),
+            self.conventional_commit_prefix(summary_points)
+        )?;
 
-            if !conventional_commit_prefix.is_empty() {
-                message.push_str(&format!("{conventional_commit_prefix}: "));
-            }
-            message.push_str(&format!("{title}\n\n{completion}\n\n"));
-        } else {
-            let (title, completion) = try_join!(
-                self.commit_title(summary_points),
-                self.commit_summary(summary_points),
-            )?;
-            message.push_str(&format!("{title}\n\n{completion}\n\n"));
-        }
+        message.push_str(&format!("{title}\n\n{completion}\n\n"));
 
         if self.output_show_per_file_summary {
             for (file_name, completion) in &summary_for_file {
@@ -113,7 +102,10 @@ impl SummarizationClient {
         lines.dedup();
         let message = lines.join("\n");
 
-        let message = self.commit_translate(&message).await?;
+        let mut message = self.commit_translate(&message).await?;
+        if !conventional_commit_prefix.is_empty() {
+            message.insert_str(0, &format!("{conventional_commit_prefix}: "));
+        }
 
         Ok(message)
     }
@@ -160,6 +152,9 @@ impl SummarizationClient {
 
     // TODO use option type and enum here
     pub(crate) async fn conventional_commit_prefix(&self, summary_points: &str) -> Result<String> {
+        if !self.output_conventional_commit {
+            return Ok("".to_string());
+        }
         let prompt = format_prompt(
             &self.prompt_conventional_commit_prefix,
             HashMap::from([("summary_points", summary_points)]),
@@ -192,6 +187,9 @@ impl SummarizationClient {
     }
 
     pub(crate) async fn commit_translate(&self, commit_message: &str) -> Result<String> {
+        if let Language::En = self.output_lang {
+            return Ok(commit_message.to_string());
+        }
         let prompt = format_prompt(
             &self.prompt_translation,
             HashMap::from([
@@ -199,10 +197,6 @@ impl SummarizationClient {
                 ("output_language", &self.output_lang.to_string()),
             ]),
         )?;
-        if self.output_lang != Language::En {
-            self.client.completions(&prompt).await
-        } else {
-            Ok(commit_message.to_string())
-        }
+        self.client.completions(&prompt).await
     }
 }
