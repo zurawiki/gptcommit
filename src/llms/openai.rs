@@ -2,6 +2,7 @@ use anyhow::{anyhow, bail, Ok, Result};
 
 use async_trait::async_trait;
 
+use reqwest::Proxy;
 use tiktoken_rs::{get_chat_completion_max_tokens, get_completion_max_tokens};
 
 use crate::settings::OpenAISettings;
@@ -33,29 +34,35 @@ impl OpenAIClient {
             bail!("No OpenAI model configured. Please choose a valid model to use.");
         }
 
-        let mut client = Client::new().with_api_key(&api_key);
+        let mut openai_client = Client::new().with_api_key(&api_key);
 
         let api_base = settings.api_base.unwrap_or_default();
         if !api_base.is_empty() {
-            client = client.with_api_base(&api_base);
+            openai_client = openai_client.with_api_base(&api_base);
         }
 
+        // Optimized HTTP client
+        let mut http_client = reqwest::Client::builder()
+            .gzip(true)
+            .brotli(true)
+            .http2_prior_knowledge();
         if let Some(proxy) = settings.proxy {
             if !proxy.is_empty() {
-                let http_client = reqwest::Client::builder()
-                    .proxy(reqwest::Proxy::all(proxy)?)
-                    .build()?;
-                client = client.with_http_client(http_client);
+                http_client = http_client.proxy(Proxy::all(proxy)?);
             }
         }
+        openai_client = openai_client.with_http_client(http_client.build()?);
 
         if settings.retries.unwrap_or_default() > 0 {
             let backoff = backoff::ExponentialBackoffBuilder::new()
                 .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
                 .build();
-            client = client.with_backoff(backoff);
+            openai_client = openai_client.with_backoff(backoff);
         }
-        Ok(Self { model, client })
+        Ok(Self {
+            model,
+            client: openai_client,
+        })
     }
 
     pub(crate) fn should_use_chat_completion(model: &str) -> bool {
