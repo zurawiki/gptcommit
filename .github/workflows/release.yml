@@ -52,6 +52,8 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             - name: Trigger homebrew release
               run: gh workflow run bump.yml --repo zurawiki/homebrew-brews
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     upload-binary:
         name: ${{ matrix.target }}
