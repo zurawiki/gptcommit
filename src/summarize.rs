@@ -104,7 +104,7 @@ impl SummarizationClient {
 
         let mut message = self.commit_translate(&message).await?;
         if !conventional_commit_prefix.is_empty() {
-            message.insert_str(0, &format!("{conventional_commit_prefix}: "));
+            message.insert_str(0, conventional_commit_prefix.as_str());
         }
 
         Ok(message)
