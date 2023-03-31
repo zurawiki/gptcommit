@@ -260,6 +260,7 @@ openai.model
 openai.proxy
 openai.retries
 output.conventional_commit
+optput.conventional_commit_prefix_format
 output.lang
 output.show_per_file_summary
 prompt.commit_summary

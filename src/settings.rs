@@ -171,6 +171,8 @@ pub enum Language {
 pub struct OutputSettings {
     /// Whether to add a conventional commit tag to the commit message
     pub conventional_commit: Option<bool>,
+    /// The format of the conventional commit tag
+    pub conventional_commit_prefix_format: Option<String>,
     /// Output language of the commit message
     pub lang: Option<String>,
     /// Whether to show the summary of each file in the commit
@@ -184,6 +186,10 @@ impl From<OutputSettings> for config::ValueKind {
         properties.insert(
             "conventional_commit".to_string(),
             config::Value::from(settings.conventional_commit),
+        );
+        properties.insert(
+            "conventional_commit_prefix_format".to_string(),
+            config::Value::from(settings.conventional_commit_prefix_format),
         );
         properties.insert("lang".to_string(), config::Value::from(settings.lang));
         properties.insert(
@@ -265,6 +271,7 @@ impl Settings {
                 "output",
                 Some(OutputSettings {
                     conventional_commit: Some(true),
+                    conventional_commit_prefix_format: Some("{{ prefix }}: ".to_string()),
                     lang: Some("en".to_string()),
                     show_per_file_summary: Some(false),
                 }),
