@@ -10,6 +10,9 @@ use anyhow::Result;
 
 use tokio::task::JoinSet;
 use tokio::try_join;
+
+use tera::{Context, Tera};
+
 #[derive(Debug, Clone)]
 pub(crate) struct SummarizationClient {
     client: Arc<dyn LlmClient>,
@@ -21,6 +24,7 @@ pub(crate) struct SummarizationClient {
     prompt_commit_title: String,
     prompt_translation: String,
     output_conventional_commit: bool,
+    output_conventional_commit_prefix_format: String,
     output_lang: Language,
     output_show_per_file_summary: bool,
 }
@@ -39,6 +43,9 @@ impl SummarizationClient {
 
         let output_settings = settings.output.unwrap_or_default();
         let output_conventional_commit = output_settings.conventional_commit.unwrap_or(true);
+        let output_conventional_commit_prefix_format = output_settings
+            .conventional_commit_prefix_format
+            .unwrap_or_default();
         let output_lang =
             Language::from_str(&output_settings.lang.unwrap_or_default()).unwrap_or_default();
         let output_show_per_file_summary = output_settings.show_per_file_summary.unwrap_or(false);
@@ -54,6 +61,7 @@ impl SummarizationClient {
             output_lang,
             output_show_per_file_summary,
             output_conventional_commit,
+            output_conventional_commit_prefix_format,
         })
     }
 
@@ -104,7 +112,11 @@ impl SummarizationClient {
 
         let mut message = self.commit_translate(&message).await?;
         if !conventional_commit_prefix.is_empty() {
-            message.insert_str(0, &format!("{conventional_commit_prefix}: "));
+            let mut ctx = Context::new();
+            ctx.insert("prefix", conventional_commit_prefix.as_str());
+            let formated_prefix =
+                Tera::one_off(&self.output_conventional_commit_prefix_format, &ctx, false)?;
+            message.insert_str(0, formated_prefix.as_str());
         }
 
         Ok(message)
