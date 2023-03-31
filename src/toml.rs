@@ -79,6 +79,7 @@ the-force = { value = "surrounds-you" }
             "openai.proxy",
             "openai.retries",
             "output.conventional_commit",
+            "output.conventional_commit_prefix_format",
             "output.lang",
             "output.show_per_file_summary",
             "prompt.commit_summary",
