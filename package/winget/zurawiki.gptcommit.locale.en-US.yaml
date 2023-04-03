@@ -1,0 +1,30 @@
+PackageIdentifier: zurawiki.gptcommit
+PackageVersion: <VERSION>
+PackageLocale: en-US
+Publisher: Roger Zurawicki
+PublisherUrl: https://github.com/zurawiki/gptcommit
+PublisherSupportUrl: https://github.com/zurawiki/gptcommit/issues
+Author: Roger Zurawicki
+PackageName: gptcommit
+PackageUrl: https://github.com/zurawiki/gptcommit
+License: MIT
+LicenseUrl: https://github.com/zurawiki/gptcommit/blob/main/LICENSE
+ShortDescription: A git prepare-commit-msg hook for authoring commit messages with GPT-3
+Tags:
+  - "console"
+  - "command-line"
+  - "shell"
+  - "command-prompt"
+  - "powershell"
+  - "wsl"
+  - "developer-tools"
+  - "utilities"
+  - "cli"
+  - "cmd"
+  - "ps"
+  - "terminal"
+  - "gptcommit"
+  - "git"
+ManifestType: defaultLocale
+ManifestVersion: 1.4.0
+ReleaseNotesUrl: https://github.com/zurawiki/gptcommit/releases/tag/v0.56
