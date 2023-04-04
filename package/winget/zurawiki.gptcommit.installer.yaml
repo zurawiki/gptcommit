@@ -4,14 +4,14 @@ ReleaseDate: <DATE>
 InstallerType: zip
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/zurawiki/gptcommit/releases/download/v0.5.6/gptcommit-x86_64-pc-windows-msvc.zip
+    InstallerUrl: https://github.com/zurawiki/gptcommit/releases/download/v<VERSION>/gptcommit-x86_64-pc-windows-msvc.zip
     InstallerSha256: <HASH>
     NestedInstallerType: portable
     NestedInstallerFiles:
       - RelativeFilePath: .\gptcommit.exe
         PortableCommandAlias: gptcommit
   - Architecture: x86
-    InstallerUrl: https://github.com/zurawiki/gptcommit/releases/download/v0.5.6/gptcommit-x86_64-pc-windows-msvc.zip
+    InstallerUrl: https://github.com/zurawiki/gptcommit/releases/download/v<VERSION>/gptcommit-x86_64-pc-windows-msvc.zip
     InstallerSha256: <HASH>
     NestedInstallerType: portable
     NestedInstallerFiles:
