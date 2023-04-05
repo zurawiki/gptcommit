@@ -1,0 +1,23 @@
+name: Winget
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The latest version'
+        required: true
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: ${{ github.workspace }}/packages/winget
+    env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+    - name: Checkout code 👋
+      uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+    - name: Create manifest and submit PR 📦
+      run: |
+        ./build.ps1 -Version "${{ github.event.inputs.version }}" -Token $env:GITHUB_TOKEN
