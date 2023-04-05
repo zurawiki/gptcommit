@@ -54,6 +54,18 @@ jobs:
               run: gh workflow run bump.yml --repo zurawiki/homebrew-brews || true
               env:
                   GITHUB_TOKEN: ${{ secrets.HOMEBREW_RELEASE_GH_TOKEN }}
+            - name: Trigger Winget Build
+              uses: actions/github-script@98814c53be79b1d30f795b907e553d8679345975
+              with:
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                script: |
+                    await github.request('POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches', {
+                        owner: 'zurawiki',
+                        repo: '${{ github.event.repository.name }}',
+                        workflow_id: 'winget.yml',
+                        ref: 'main',
+                        inputs: {"version": process.env.GITHUB_REF.replace('refs/tags/v', '')}
+                    })
 
     upload-binary:
         name: ${{ matrix.target }}
