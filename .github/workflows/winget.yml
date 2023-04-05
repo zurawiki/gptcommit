@@ -3,21 +3,21 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'The latest version'
+        description: 'The latest version (ex: 1.2.3)'
         required: true
 
 jobs:
-  publish:
+  publish-winget:
     runs-on: windows-latest
-    defaults:
-      run:
-        shell: pwsh
-        working-directory: ${{ github.workspace }}/packages/winget
-    env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-    - name: Checkout code 👋
-      uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        persist-credentials: true
     - name: Create manifest and submit PR 📦
+      shell: pwsh
+      working-directory: ./packages/winget
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         ./build.ps1 -Version "${{ github.event.inputs.version }}" -Token $env:GITHUB_TOKEN
