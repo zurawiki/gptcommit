@@ -54,7 +54,6 @@ if (-not $Token) {
 }
 
 # Download Winget-Create msixbundle, install, and execute update.
-Import-Module Appx
 $appxBundleFile = "$env:TEMP\wingetcreate.msixbundle"
 Invoke-WebRequest https://aka.ms/wingetcreate/latest/msixbundle -OutFile $appxBundleFile
 Add-AppxPackage $appxBundleFile
