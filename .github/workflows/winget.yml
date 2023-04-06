@@ -16,7 +16,7 @@ jobs:
         persist-credentials: true
     - name: Create manifest and submit PR 📦
       shell: pwsh
-      working-directory: ./packages/winget
+      working-directory: ${{ github.workspace }}/packages/winget
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
