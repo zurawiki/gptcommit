@@ -9,15 +9,17 @@ on:
 jobs:
   publish-winget:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: ${{ github.workspace }}/package/winget
+    env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
       with:
         persist-credentials: true
     - name: Create manifest and submit PR 📦
-      shell: pwsh
-      working-directory: ${{ github.workspace }}/package/winget
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         ./build.ps1 -Version "${{ github.event.inputs.version }}" -Token $env:GITHUB_TOKEN
