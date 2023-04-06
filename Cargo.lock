@@ -1977,6 +1977,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98ff100c3f9f45f134fe9e14ac88691004d54eb91391a40c528cfd613e7ab374"
 dependencies = [
  "anyhow",
+ "async-openai",
  "base64 0.21.0",
  "bstr",
  "fancy-regex",

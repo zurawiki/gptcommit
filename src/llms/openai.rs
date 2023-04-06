@@ -3,7 +3,7 @@ use anyhow::{anyhow, bail, Ok, Result};
 use async_trait::async_trait;
 
 use reqwest::{tls, Proxy};
-use tiktoken_rs::{get_chat_completion_max_tokens, get_completion_max_tokens};
+use tiktoken_rs::{async_openai::get_chat_completion_max_tokens, get_completion_max_tokens};
 
 use crate::settings::OpenAISettings;
 use async_openai::{
