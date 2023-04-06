@@ -27,4 +27,4 @@ Tags:
   - "git"
 ManifestType: defaultLocale
 ManifestVersion: 1.4.0
-ReleaseNotesUrl: https://github.com/zurawiki/gptcommit/releases/tag/v0.56
+ReleaseNotesUrl: https://github.com/zurawiki/gptcommit/releases/tag/v<VERSION>
