@@ -10,12 +10,5 @@ Installers:
     NestedInstallerFiles:
       - RelativeFilePath: .\gptcommit.exe
         PortableCommandAlias: gptcommit
-  - Architecture: x86
-    InstallerUrl: https://github.com/zurawiki/gptcommit/releases/download/v<VERSION>/gptcommit-x86_64-pc-windows-msvc.zip
-    InstallerSha256: <HASH>
-    NestedInstallerType: portable
-    NestedInstallerFiles:
-      - RelativeFilePath: .\gptcommit.exe
-        PortableCommandAlias: gptcommit
 ManifestType: installer
 ManifestVersion: 1.4.0
