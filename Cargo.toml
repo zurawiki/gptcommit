@@ -1,6 +1,6 @@
 [package]
 name = "gptcommit"
-version = "0.5.7"
+version = "0.5.8"
 edition = "2021"
 rust-version = "1.67"
 authors = ["Roger Zurawicki <roger@zura.wiki>"]
