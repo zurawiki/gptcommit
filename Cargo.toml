@@ -24,7 +24,7 @@ backoff = "0.4.0"
 clap = { version = "4.2.4", features = ["derive"] }
 colored = "2.0.0"
 config = { version = "0.13.3", features = ["toml"] }
-dirs = "5.0.0"
+dirs = "5.0.1"
 lazy_static = "1.4.0"
 log = "0.4.17"
 regex = "1.8.1"
