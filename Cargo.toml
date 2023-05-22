@@ -38,7 +38,7 @@ tera = { version = "1.18.1", default-features = false }
 tiktoken-rs = { version = "0.4.2", features = ["async-openai"] }
 tokio = { version = "1.27.0", features = ["full"] }
 toml = "0.7.3"
-toml_edit = "0.19.8"
+toml_edit = "0.19.9"
 which = "4.4.0"
 
 
