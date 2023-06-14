@@ -1,3 +1,6 @@
+pub(crate) static HTTP_USER_AGENT: &str =
+    concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
+
 pub(crate) trait SplitPrefixInclusive {
     fn split_prefix_inclusive<'a>(&'a self, prefix: &str) -> Vec<&'a str>;
 }
