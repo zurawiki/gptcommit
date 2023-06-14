@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use anyhow::{anyhow, bail, Ok, Result};
 
 use async_trait::async_trait;
@@ -5,7 +7,7 @@ use async_trait::async_trait;
 use reqwest::{tls, Proxy};
 use tiktoken_rs::{async_openai::get_chat_completion_max_tokens, get_completion_max_tokens};
 
-use crate::settings::OpenAISettings;
+use crate::{settings::OpenAISettings, util::HTTP_USER_AGENT};
 use async_openai::{
     types::{
         ChatCompletionRequestMessageArgs, CreateChatCompletionRequestArgs,
@@ -37,10 +39,21 @@ impl OpenAIClient {
         let mut openai_client = Client::new().with_api_key(&api_key);
 
         let api_base = settings.api_base.unwrap_or_default();
-        let mut http_client = reqwest::Client::builder().gzip(true).brotli(true);
+        // TODO make configurable
+        let mut http_client = reqwest::Client::builder()
+            .gzip(true)
+            .brotli(true)
+            .timeout(Duration::from_secs(60))
+            .user_agent(HTTP_USER_AGENT);
+
         if api_base.is_empty() {
             http_client = http_client
                 .http2_prior_knowledge()
+                .https_only(true)
+                .http2_adaptive_window(true)
+                .tcp_keepalive(Duration::from_secs(60))
+                .http2_keep_alive_interval(Duration::from_secs(60))
+                .http2_keep_alive_while_idle(true)
                 .min_tls_version(tls::Version::TLS_1_2);
         } else {
             openai_client = openai_client.with_api_base(&api_base);
