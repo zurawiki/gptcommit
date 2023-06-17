@@ -1,6 +1,7 @@
-use std::time::Duration;
-
 use anyhow::{anyhow, bail, Ok, Result};
+use std::fmt;
+use std::fmt::Debug;
+use std::time::Duration;
 
 use async_trait::async_trait;
 
@@ -9,6 +10,7 @@ use tiktoken_rs::{async_openai::get_chat_completion_max_tokens, get_completion_m
 
 use crate::{settings::OpenAISettings, util::HTTP_USER_AGENT};
 use async_openai::{
+    config::OpenAIConfig,
     types::{
         ChatCompletionRequestMessageArgs, CreateChatCompletionRequestArgs,
         CreateCompletionRequestArgs, Role,
@@ -19,10 +21,17 @@ use async_openai::{
 use super::llm_client::LlmClient;
 const COMPLETION_TOKEN_LIMIT: usize = 100;
 
-#[derive(Clone, Debug)]
 pub(crate) struct OpenAIClient {
     model: String,
-    client: Client,
+    client: Client<OpenAIConfig>,
+}
+
+impl Debug for OpenAIClient {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("OpenAIClient")
+            .field("model", &self.model)
+            .finish()
+    }
 }
 
 impl OpenAIClient {
@@ -36,9 +45,13 @@ impl OpenAIClient {
             bail!("No OpenAI model configured. Please choose a valid model to use.");
         }
 
-        let mut openai_client = Client::new().with_api_key(&api_key);
+        let mut openai_config = OpenAIConfig::new().with_api_key(api_key);
 
         let api_base = settings.api_base.unwrap_or_default();
+        if !api_base.is_empty() {
+            openai_config = openai_config.with_api_base(&api_base);
+        }
+        let mut openai_client = Client::<OpenAIConfig>::with_config(openai_config);
         // TODO make configurable
         let mut http_client = reqwest::Client::builder()
             .gzip(true)
@@ -47,6 +60,7 @@ impl OpenAIClient {
             .user_agent(HTTP_USER_AGENT);
 
         if api_base.is_empty() {
+            // Optimized HTTP client
             http_client = http_client
                 .http2_prior_knowledge()
                 .https_only(true)
@@ -55,11 +69,7 @@ impl OpenAIClient {
                 .http2_keep_alive_interval(Duration::from_secs(60))
                 .http2_keep_alive_while_idle(true)
                 .min_tls_version(tls::Version::TLS_1_2);
-        } else {
-            openai_client = openai_client.with_api_base(&api_base);
         }
-
-        // Optimized HTTP client
 
         if let Some(proxy) = settings.proxy {
             if !proxy.is_empty() {
