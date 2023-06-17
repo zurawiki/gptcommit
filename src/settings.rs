@@ -22,7 +22,7 @@ use crate::{
     },
 };
 
-static DEFAULT_OPENAI_MODEL: &str = "gpt-3.5-turbo";
+static DEFAULT_OPENAI_MODEL: &str = "gpt-3.5-turbo-16k";
 
 static DEFAULT_FILES_TO_IGNORE: &[&str; 4] = &[
     "package-lock.json",
