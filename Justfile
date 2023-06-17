@@ -52,11 +52,11 @@ version level:
         git push origin HEAD
     git push
 
-bump-patch: lint build test
+release-patch: lint build test
     just version patch
 
-bump-minor: lint build test
+release-minor: lint build test
     just version minor
 
-bump-major: lint build test
+release-major: lint build test
     just version major
