@@ -33,7 +33,7 @@ serde_derive = "1.0.164"
 serde_json = "1.0.97"
 simple_logger = "4.2.0"
 strum = "0.24.1"
-strum_macros = "0.24.3"
+strum_macros = "0.25.0"
 tera = { version = "1.19.0", default-features = false }
 tiktoken-rs = { version = "0.4.3", features = ["async-openai"] }
 tokio = { version = "1.28.2", features = ["full"] }
