@@ -1,7 +1,11 @@
 version: 2
 updates:
   - directory: /
-    open-pull-requests-limit: 5
     package-ecosystem: "cargo"
+    schedule:
+      interval: "weekly"
+
+  - directory: "/"
+    package-ecosystem: "github-actions"
     schedule:
       interval: "weekly"
