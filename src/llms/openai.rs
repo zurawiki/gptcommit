@@ -156,10 +156,15 @@ impl OpenAIClient {
         if let Some(choice) = response.choices.into_iter().next() {
             debug!(
                 "{}: Role: {}  Content: {}",
-                choice.index, choice.message.role, choice.message.content
+                choice.index,
+                choice.message.role,
+                choice.message.content.clone().unwrap_or_default()
             );
 
-            return Ok(choice.message.content);
+            return choice
+                .message
+                .content
+                .ok_or(anyhow!("No completion results returned from OpenAI."));
         }
 
         bail!("No completion results returned from OpenAI.")
