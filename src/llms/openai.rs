@@ -36,21 +36,16 @@ impl Debug for OpenAIClient {
 
 impl OpenAIClient {
     pub(crate) fn new(settings: OpenAISettings) -> Result<Self, anyhow::Error> {
-        let api_key = settings.api_key.unwrap_or_default();
-        if api_key.is_empty() {
-            bail!("No OpenAI API key found. Please provide a valid API key.");
-        }
-        let model = settings.model.unwrap_or_default();
-        if model.is_empty() {
-            bail!("No OpenAI model configured. Please choose a valid model to use.");
-        }
-
-        let mut openai_config = OpenAIConfig::new().with_api_key(api_key);
-
         let api_base = settings.api_base.unwrap_or_default();
-        if !api_base.is_empty() {
-            openai_config = openai_config.with_api_base(&api_base);
-        }
+        let openai_config = if api_base.is_empty() {
+            let api_key = settings.api_key.unwrap_or_default();
+            if api_key.is_empty() {
+                bail!("No OpenAI API key found. Please provide a valid API key.");
+            }
+            OpenAIConfig::new().with_api_key(api_key)
+        } else {
+            OpenAIConfig::new().with_api_base(&api_base)
+        };
         let mut openai_client = Client::<OpenAIConfig>::with_config(openai_config);
         // TODO make configurable
         let mut http_client = reqwest::Client::builder()
@@ -69,6 +64,10 @@ impl OpenAIClient {
                 .http2_keep_alive_interval(Duration::from_secs(60))
                 .http2_keep_alive_while_idle(true)
                 .min_tls_version(tls::Version::TLS_1_2);
+        }
+        let model = settings.model.unwrap_or_default();
+        if api_base.is_empty() && model.is_empty() {
+            bail!("No OpenAI model configured. Please choose a valid model to use.");
         }
 
         if let Some(proxy) = settings.proxy {
