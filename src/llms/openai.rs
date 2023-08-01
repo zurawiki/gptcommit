@@ -10,7 +10,7 @@ use tiktoken_rs::{async_openai::get_chat_completion_max_tokens, get_completion_m
 
 use crate::{settings::OpenAISettings, util::HTTP_USER_AGENT};
 use async_openai::{
-    config::OpenAIConfig,
+    config::{OpenAIConfig, OPENAI_API_BASE},
     types::{
         ChatCompletionRequestMessageArgs, CreateChatCompletionRequestArgs,
         CreateCompletionRequestArgs, Role,
@@ -36,17 +36,20 @@ impl Debug for OpenAIClient {
 
 impl OpenAIClient {
     pub(crate) fn new(settings: OpenAISettings) -> Result<Self, anyhow::Error> {
-        let api_base = settings.api_base.unwrap_or_default();
-        let openai_config = if api_base.is_empty() {
-            let api_key = settings.api_key.unwrap_or_default();
-            if api_key.is_empty() {
-                bail!("No OpenAI API key found. Please provide a valid API key.");
-            }
-            OpenAIConfig::new().with_api_key(api_key)
-        } else {
-            OpenAIConfig::new().with_api_base(&api_base)
-        };
+        let api_base = settings
+            .api_base
+            .unwrap_or_else(|| OPENAI_API_BASE.to_string());
+        let api_key = settings.api_key.unwrap_or_default();
+
+        let openai_config = OpenAIConfig::new()
+            .with_api_base(&api_base)
+            .with_api_key(&api_key);
+
         let mut openai_client = Client::<OpenAIConfig>::with_config(openai_config);
+
+        if api_base == OPENAI_API_BASE && api_key.is_empty() {
+            bail!("No OpenAI API key found. Please provide a valid API key.");
+        }
         // TODO make configurable
         let mut http_client = reqwest::Client::builder()
             .gzip(true)
@@ -54,7 +57,7 @@ impl OpenAIClient {
             .timeout(Duration::from_secs(60))
             .user_agent(HTTP_USER_AGENT);
 
-        if api_base.is_empty() {
+        if api_base == OPENAI_API_BASE {
             // Optimized HTTP client
             http_client = http_client
                 .http2_prior_knowledge()
@@ -66,7 +69,7 @@ impl OpenAIClient {
                 .min_tls_version(tls::Version::TLS_1_2);
         }
         let model = settings.model.unwrap_or_default();
-        if api_base.is_empty() && model.is_empty() {
+        if api_base == OPENAI_API_BASE && model.is_empty() {
             bail!("No OpenAI model configured. Please choose a valid model to use.");
         }
 
