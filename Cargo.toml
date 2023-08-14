@@ -35,7 +35,7 @@ simple_logger = "4.2.0"
 strum = "0.25.0"
 strum_macros = "0.25.2"
 tera = { version = "1.19.0", default-features = false }
-tiktoken-rs = { version = "0.5.0", features = ["async-openai"] }
+tiktoken-rs = { version = "0.5.1", features = ["async-openai"] }
 tokio = { version = "1.29.1", features = ["full"] }
 toml = "0.7.6"
 toml_edit = "0.19.14"
