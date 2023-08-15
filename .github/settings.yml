@@ -1,0 +1,56 @@
+# These settings are synced to GitHub by https://probot.github.io/apps/settings/
+
+repository:
+  description: A git prepare-commit-msg hook for authoring commit messages with GPT-3.
+  topics: git rust cli githook large-language-models gpt3 commit-message
+  has_issues: true
+  has_projects: false
+  has_wiki: false
+  has_downloads: true
+  default_branch: main
+
+  allow_squash_merge: false
+  allow_merge_commit: false
+  allow_rebase_merge: true
+
+  allow_auto_merge: true
+  delete_branch_on_merge: true
+
+# labels:
+#   - name: E-easy
+#     color: '#02e10c'
+#     description: "Call for participation: experience needed to fix: easy / not much (good first issue)"
+#   - name: E-medium
+#     color: '#02e10c'
+#     description: "Call for participation: experience needed to fix: medium / intermediate"
+#   - name: E-hard
+#     color: '#02e10c'
+#     description: "Call for participation: experience needed to fix: hard / a lot."
+
+branches:
+  - name: main
+    # https://docs.github.com/en/rest/reference/repos#update-branch-protection
+    # Branch Protection settings. Set to null to disable.
+    protection:
+      # Required. Require at least one approving review on a pull request, before merging. Set to null to disable.
+      required_pull_request_reviews:
+        require_code_owner_reviews: true
+      # Required. Require that conversations are resolved before merging.
+      # We disable this.
+      required_conversation_resolution: null
+      # Required. Require status checks to pass before merging. Set to null to disable
+      required_status_checks:
+        # Required. Require branches to be up to date before merging.
+        # We disable this.
+        strict: null
+        # Required. The list of status checks to require in order to merge into this branch
+        contexts: [
+          "All CI stages"
+        ]
+      # Required. Enforce all configured restrictions for administrators. Set to true to enforce required status checks for repository administrators. Set to null to disable.
+      # We disable this.
+      enforce_admins: false
+      # Required. Restrict who can push to this branch. Team and user restrictions are only available for organization-owned repositories. Set to null to disable.
+      restrictions: null
+      # Prevent merge commits from being pushed to matching branches
+      required_linear_history: true
