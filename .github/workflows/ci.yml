@@ -31,7 +31,7 @@ jobs:
         env:
             CARGO_BUILD_TARGET: ${{ matrix.target }}
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
 
             - name: Install rust
               uses: actions-rs/toolchain@v1
@@ -54,7 +54,7 @@ jobs:
     lint:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
 
             - name: Install rust
               uses: actions-rs/toolchain@v1
@@ -100,7 +100,7 @@ jobs:
             publish-tag: ${{ steps.tag.outputs.tag }}
         steps:
             - name: Checkout
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
               with:
                   persist-credentials: false
 
