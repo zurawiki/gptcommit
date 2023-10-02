@@ -27,7 +27,7 @@ config = { version = "0.13.3", features = ["toml"] }
 dirs = "5.0.1"
 lazy_static = "1.4.0"
 log = "0.4.20"
-regex = "1.9.5"
+regex = "1.9.6"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0.188"
 serde_json = "1.0.107"
