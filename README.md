@@ -97,6 +97,28 @@ To maintain compatibility with other OpenAI clients, we support the `OPENAI_API_
 gptcommit config set openai.model text-davinci-002
 ```
 
+### Try out Anthropic,Huggingface,Palm,Ollama, etc.[Full List](https://docs.litellm.ai/docs/providers)
+
+#### Create OpenAI-proxy
+We'll use [LiteLLM](https://docs.litellm.ai/docs/) to create an OpenAI-compatible endpoint, that translates OpenAI calls to any of the [supported providers](https://docs.litellm.ai/docs/providers).
+
+```python
+pip install litellm
+```
+```python
+$ litellm --model ollama/codellama
+
+#INFO: Ollama running on http://0.0.0.0:8000
+```
+
+[Docs](https://docs.litellm.ai/docs/proxy_server)
+
+#### Update GPTCommit
+
+```sh
+gptcommit config set --local openai.api_base http://0.0.0.0:8000
+```
+
 You can also config this setting via the `GPTCOMMIT__OPENAI__MODEL`.
 
 For a list of public OpenAI models, checkout the [OpenAI docs](https://beta.openai.com/docs/models/overview). You can also bring in your own fine-tuned model.
