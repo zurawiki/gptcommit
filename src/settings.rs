@@ -24,11 +24,15 @@ use crate::{
 
 static DEFAULT_OPENAI_MODEL: &str = "gpt-3.5-turbo-16k";
 
-static DEFAULT_FILES_TO_IGNORE: &[&str; 4] = &[
-    "package-lock.json",
-    "yarn.lock",
-    "pnpm-lock.yaml",
+static DEFAULT_FILES_TO_IGNORE: &[&str; 8] = &[
+    "bun.lockb",
     "Cargo.lock",
+    "composer.lock",
+    "Gemfile.lock",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "poetry.lock",
+    "yarn.lock",
 ];
 
 #[derive(Debug, Clone, Display, Serialize, Default, EnumString)]
