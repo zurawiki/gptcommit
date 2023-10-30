@@ -37,7 +37,7 @@ strum_macros = "0.25.2"
 tera = { version = "1.19.1", default-features = false }
 tiktoken-rs = { version = "0.5.4", features = ["async-openai"] }
 tokio = { version = "1.32.0", features = ["full"] }
-toml = "0.8.0"
+toml = "0.8.6"
 toml_edit = "0.20.0"
 which = "4.4.2"
 
