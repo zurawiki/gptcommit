@@ -111,7 +111,7 @@ async fn get(settings: Settings, full_key: String) -> Result<()> {
 
     let mut node: &Value = &toml::from_str(&toml_string)?;
     let mut path = key_to_path(&full_key);
-    while let Some(key) = path.get(0) {
+    while let Some(key) = path.front() {
         if let Some(child_config) = node.get(key) {
             node = child_config;
             path.pop_front();
