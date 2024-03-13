@@ -76,6 +76,15 @@ fn get_llm_client(settings: &Settings) -> Box<dyn LlmClient> {
     }
 }
 
+pub(crate) async fn generate_commit_message(settings: &Settings, diff: &str) -> Result<String> {
+    let client = get_llm_client(settings);
+    let summarization_client = SummarizationClient::new(settings.to_owned(), client)?;
+
+    let file_diffs = diff.split_prefix_inclusive("\ndiff --git ");
+    let commit_message = summarization_client.get_commit_message(file_diffs).await?;
+    Ok(commit_message)
+}
+
 pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Result<()> {
     match (args.commit_source, settings.allow_amend) {
         (CommitSource::Empty, _) | (CommitSource::Commit, Some(true)) => {}
@@ -91,9 +100,6 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
         }
     };
 
-    let client = get_llm_client(&settings);
-    let summarization_client = SummarizationClient::new(settings.to_owned(), client)?;
-
     println!(
         "{}",
         "🤖 Let's ask OpenAI to summarize those diffs! 🚀"
@@ -107,8 +113,7 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
         git::get_diffs()?
     };
 
-    let file_diffs = output.split_prefix_inclusive("\ndiff --git ");
-    let commit_message = summarization_client.get_commit_message(file_diffs).await?;
+    let commit_message = generate_commit_message(&settings, &output).await?;
 
     // prepend output to commit message
     let mut original_message: String = if args.commit_msg_file.is_file() {

@@ -8,7 +8,7 @@ use clap::{Parser, Subcommand};
 pub(crate) struct GptcommitCLI {
     /// The action to perform (subcommand).
     #[command(subcommand)]
-    pub action: Action,
+    pub action: Option<Action>,
     /// Enable verbose logging.
     #[arg(short, long, global = true)]
     pub verbose: bool,
