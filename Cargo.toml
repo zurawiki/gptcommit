@@ -39,7 +39,7 @@ tiktoken-rs = { version = "0.5.4", features = ["async-openai"] }
 tokio = { version = "1.32.0", features = ["full"] }
 toml = "0.8.0"
 toml_edit = "0.20.0"
-which = "4.4.2"
+which = "6.0.3"
 
 
 [dependencies.reqwest]
