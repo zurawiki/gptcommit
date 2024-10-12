@@ -43,7 +43,7 @@ jobs:
 
             - uses: Swatinem/rust-cache@v2
 
-            - uses: extractions/setup-just@v1
+            - uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6 # v2
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -65,7 +65,7 @@ jobs:
 
             - uses: Swatinem/rust-cache@v2
 
-            - uses: extractions/setup-just@v1
+            - uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6 # v2
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
