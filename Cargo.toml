@@ -23,7 +23,7 @@ async-trait = "0.1.73"
 backoff = "0.4.0"
 clap = { version = "4.4.4", features = ["derive"] }
 colored = "2.0.4"
-config = { version = "0.13.3", features = ["toml"] }
+config = { version = "0.14.0", features = ["toml"] }
 dirs = "5.0.1"
 lazy_static = "1.4.0"
 log = "0.4.20"
