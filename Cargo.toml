@@ -2,7 +2,7 @@
 name = "gptcommit"
 version = "0.5.17"
 edition = "2021"
-rust-version = "1.72"
+rust-version = "1.74"
 authors = ["Roger Zurawicki <roger@zura.wiki>"]
 categories = ["development-tools"]
 keywords = ["openai", "githook", "git", "ai", "gpt"]
