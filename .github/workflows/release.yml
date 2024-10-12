@@ -21,18 +21,18 @@ jobs:
         if: github.ref == 'refs/heads/main'
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4
               with:
                   persist-credentials: true
 
             - name: Install rust
-              uses: actions-rs/toolchain@v1
+              uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
               with:
                   toolchain: stable
                   profile: minimal
                   override: true
 
-            - uses: Swatinem/rust-cache@v2
+            - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2
 
             - name: Publish
               run: cargo publish
@@ -43,7 +43,7 @@ jobs:
               run: |
                   git tag "${{ inputs.publish-tag }}"
                   git push origin "${{ inputs.publish-tag }}"
-            - uses: taiki-e/create-gh-release-action@v1
+            - uses: taiki-e/create-gh-release-action@72d65cee1f8033ef0c8b5d79eaf0c45c7c578ce3 # v1
               name: Create github release
               with:
                   branch: main
@@ -92,19 +92,19 @@ jobs:
         runs-on: ${{ matrix.os || 'ubuntu-latest' }}
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4
               with:
                   persist-credentials: false
 
             - name: Install rust
-              uses: actions-rs/toolchain@v1
+              uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
               with:
                   toolchain: stable
                   profile: minimal
                   override: true
 
             - name: Upload binary
-              uses: taiki-e/upload-rust-binary-action@v1
+              uses: taiki-e/upload-rust-binary-action@3bbb07bb7f438d0fdf6ce5118bdf9e6e21c0b2a5 # v1
               with:
                   bin: gptcommit
                   target: ${{ matrix.target }}

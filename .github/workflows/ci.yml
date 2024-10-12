@@ -31,17 +31,17 @@ jobs:
         env:
             CARGO_BUILD_TARGET: ${{ matrix.target }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4
 
             - name: Install rust
-              uses: actions-rs/toolchain@v1
+              uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
               with:
                   target: ${{ matrix.target }}
                   toolchain: stable
                   profile: minimal
                   override: true
 
-            - uses: Swatinem/rust-cache@v2
+            - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2
 
             - uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6 # v2
               env:
@@ -54,16 +54,16 @@ jobs:
     lint:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4
 
             - name: Install rust
-              uses: actions-rs/toolchain@v1
+              uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
               with:
                   toolchain: stable
                   override: true
                   components: rustfmt, clippy
 
-            - uses: Swatinem/rust-cache@v2
+            - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2
 
             - uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6 # v2
               env:
@@ -100,18 +100,18 @@ jobs:
             publish-tag: ${{ steps.tag.outputs.tag }}
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4
               with:
                   persist-credentials: false
 
             - name: Install rust
-              uses: actions-rs/toolchain@v1
+              uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
               with:
                   toolchain: stable
                   profile: minimal
                   override: true
 
-            - uses: Swatinem/rust-cache@v2
+            - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2
 
             - id: check
               run: |
