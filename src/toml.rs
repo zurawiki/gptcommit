@@ -1,4 +1,4 @@
-use toml_edit::{visit::*, Document, Item, Value};
+use toml_edit::{visit::*, DocumentMut, Item, Value};
 
 #[derive(Default)]
 pub(crate) struct DeepKeysCollector<'doc> {
@@ -8,7 +8,7 @@ pub(crate) struct DeepKeysCollector<'doc> {
 
 impl DeepKeysCollector<'_> {
     pub fn get_keys(toml_string: String) -> Vec<String> {
-        let document: Document = toml_string.parse().unwrap();
+        let document: DocumentMut = toml_string.parse().unwrap();
         let mut visitor = DeepKeysCollector::default();
         visitor.visit_document(&document);
 
@@ -47,7 +47,7 @@ impl<'doc> Visit<'doc> for DeepKeysCollector<'doc> {
 
 #[cfg(test)]
 mod tests {
-    use toml_edit::Document;
+    use toml_edit::DocumentMut;
 
     use crate::settings::Settings;
 
@@ -60,7 +60,7 @@ laputa = "sky-castle"
 the-force = { value = "surrounds-you" }
 "#;
 
-        let document: Document = input.parse().unwrap();
+        let document: DocumentMut = input.parse().unwrap();
         let mut visitor = DeepKeysCollector::default();
         visitor.visit_document(&document);
 
@@ -93,7 +93,7 @@ the-force = { value = "surrounds-you" }
     fn test_default_config() {
         let input = toml::to_string_pretty(&Settings::new().unwrap()).unwrap();
 
-        let document: Document = input.parse().unwrap();
+        let document: DocumentMut = input.parse().unwrap();
         let mut visitor = DeepKeysCollector::default();
         visitor.visit_document(&document);
 
