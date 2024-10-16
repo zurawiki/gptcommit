@@ -60,7 +60,7 @@ impl<'de> serde::Deserialize<'de> for ModelProvider {
     {
         struct ModelProviderVisitor;
 
-        impl<'de> serde::de::Visitor<'de> for ModelProviderVisitor {
+        impl serde::de::Visitor<'_> for ModelProviderVisitor {
             type Value = ModelProvider;
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
                 write!(formatter, "an string representing a ModelProvider")
