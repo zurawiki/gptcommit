@@ -17,7 +17,7 @@ name = "gptcommit"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = "1.0.90"
 async-openai = "0.14.2"
 async-trait = "0.1.73"
 backoff = "0.4.0"
