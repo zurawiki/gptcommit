@@ -62,7 +62,7 @@ jobs:
             env:
                 GH_TOKEN: ${{ secrets.HOMEBREW_RELEASE_GH_TOKEN }}
           - name: Trigger Winget Build
-            uses: actions/github-script@660ec11d825b714d112a6bb9727086bc2cc500b2
+            uses: actions/github-script@4020e461acd7a80762cdfff123a1fde368246fa4
             with:
               github-token: ${{ secrets.GITHUB_TOKEN }}
               script: |
