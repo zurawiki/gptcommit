@@ -141,7 +141,11 @@ impl SummarizationClient {
 
                 return None;
             }
-            let completion = self.diff_summary(file_name, file_diff).await;
+
+            // Checking for comments in the diff
+            let comment_changes = self.extract_comment_changes(file_diff);
+
+            let completion = self.diff_summary(file_name, file_diff, &comment_changes).await;
             Some((
                 file_name.to_string(),
                 completion.unwrap_or_else(|_| "".to_string()),
@@ -151,12 +155,26 @@ impl SummarizationClient {
         }
     }
 
-    async fn diff_summary(&self, file_name: &str, file_diff: &str) -> Result<String> {
+    /// Extracts changes related to comments in the diff.
+    fn extract_comment_changes(&self, file_diff: &str) -> String {
+        let mut comment_changes = String::new();
+        for line in file_diff.lines() {
+            if line.starts_with("+") && line.contains("//") || line.contains("/*") {
+                comment_changes.push_str(&format!("Added comment: {line}\n"));
+            } else if line.starts_with("-") && line.contains("//") || line.contains("/*") {
+                comment_changes.push_str(&format!("Removed comment: {line}\n"));
+            }
+        }
+        comment_changes
+    }
+
+    async fn diff_summary(&self, file_name: &str, file_diff: &str, comment_changes: &str) -> Result<String> {
         debug!("summarizing file: {}", file_name);
 
+        // Incorporating the extracted comment changes into the prompt
         let prompt = format_prompt(
             &self.prompt_file_diff,
-            HashMap::from([("file_diff", file_diff)]),
+            HashMap::from([("file_diff", file_diff), ("comment_changes", comment_changes)]),
         )?;
 
         self.client.completions(&prompt).await
@@ -212,3 +230,4 @@ impl SummarizationClient {
         self.client.completions(&prompt).await
     }
 }
+
