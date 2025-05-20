@@ -28,9 +28,11 @@ impl SplitPrefixInclusive for str {
 ///
 /// If the diff is not of the expected form, then None is returned.
 pub(crate) fn get_file_name_from_diff(file_diff: &str) -> Option<&str> {
-    let (_, suffix) = file_diff.split_once("diff --git a/")?;
-    let (file_name, _) = suffix.split_once(' ')?;
-    Some(file_name)
+    let (_, suffix) = file_diff.split_once("diff --git ")?;
+    let mut parts = suffix.split_whitespace();
+    let _old = parts.next()?;
+    let new = parts.next()?;
+    new.strip_prefix("b/")
 }
 
 #[cfg(test)]
@@ -84,6 +86,13 @@ index 0000000..a51b2a6
 "#[1..]
             ),
             Some("foo")
+        );
+
+        assert_eq!(
+            get_file_name_from_diff(
+                "diff --git a/old_name b/new_name\n--- a/old_name\n+++ b/new_name"
+            ),
+            Some("new_name")
         );
     }
 }
