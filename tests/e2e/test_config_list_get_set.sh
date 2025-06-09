@@ -6,7 +6,7 @@ gptcommit config list
 gptcommit config keys
 
 gptcommit config get openai.model
-# assert default = text-davinci-003
+# assert default = gpt-4.1-nano
 gptcommit config set openai.model foo
 gptcommit config get openai.model
 # assert is foo

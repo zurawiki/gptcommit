@@ -22,7 +22,8 @@ use crate::{
     },
 };
 
-static DEFAULT_OPENAI_MODEL: &str = "gpt-3.5-turbo-16k";
+// Use the fastest and cheapest model available by default
+static DEFAULT_OPENAI_MODEL: &str = "gpt-4.1-nano";
 
 static DEFAULT_FILES_TO_IGNORE: &[&str; 8] = &[
     "bun.lockb",

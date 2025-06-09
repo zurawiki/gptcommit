@@ -1,9 +1,6 @@
-You are an expert programmer summarizing a code change.
-You went over every file that was changed in it.
-For some of these files changes where too big and were omitted in the files diff summary.
-Determine the best label for the commit.
+You are an expert programmer determining the best conventional commit label for the following change.
 
-Here are the labels you can choose from:
+Choose one of the following labels:
 
 - build: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
 - chore: Updating libraries, copyrights or other repo setting, includes updating dependencies.
@@ -22,4 +19,4 @@ THE FILE SUMMARIES:
 {{ summary_points }}
 ###
 
-The label best describing this change:
+Respond with only the label best describing this change:

@@ -8,7 +8,7 @@
 [![crates.io downloads](https://img.shields.io/crates/d/gptcommit.svg)](https://crates.io/crates/gptcommit)
 [![Rust dependency status](https://deps.rs/repo/github/zurawiki/gptcommit/status.svg)](https://deps.rs/repo/github/zurawiki/gptcommit)
 
-A git prepare-commit-msg hook for authoring commit messages with GPT-3. With this tool, you can easily generate clear, comprehensive and descriptive commit messages letting you focus on writing code.
+A git prepare-commit-msg hook for authoring commit messages with an OpenAI language model. With this tool, you can easily generate clear, comprehensive and descriptive commit messages letting you focus on writing code.
 
 See [announcement blog post](https://zura.wiki/post/never-write-a-commit-message-again-with-the-help-of-gpt-3/).
 
@@ -40,7 +40,7 @@ gptcommit install
 
 To use `gptcommit`, simply run `git commit` as you normally would. The hook will automatically generate a commit message for you using a large language model like GPT. If you're not satisfied with the generated message, you can always edit it before committing.
 
-Note: By default, `gptcommit` uses the GPT-3 model. Please ensure you have sufficient credits in your OpenAI account to use it.
+Note: By default, `gptcommit` uses the fastest and most cost-effective OpenAI model available. Please ensure you have sufficient credits in your OpenAI account to use it.
 
 ## Features
 
@@ -91,10 +91,10 @@ To maintain compatibility with other OpenAI clients, we support the `OPENAI_API_
 
 ### Try out a different OpenAI model
 
-`gptcommit` uses `text-davinci-003` by default. The model can be configured to use other models as below
+`gptcommit` uses a cost-effective default model. The model can be configured to use other models as below
 
 ```sh
-gptcommit config set openai.model text-davinci-002
+gptcommit config set openai.model your-model-name
 ```
 
 You can also config this setting via the `GPTCOMMIT__OPENAI__MODEL`.

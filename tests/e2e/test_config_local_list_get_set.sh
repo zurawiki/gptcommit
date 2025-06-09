@@ -10,7 +10,7 @@ export TEMPDIR=$(mktemp -d)
     # assert is valid TOML
 
     gptcommit config get openai.model
-    # assert default = text-davinci-003
+    # assert default = gpt-4.1-nano
     gptcommit config set --local openai.model foo
     gptcommit config set openai.model bar
     gptcommit config get openai.model
@@ -34,7 +34,7 @@ export TEMPDIR=$(mktemp -d)
     # assert is valid TOML
 
     gptcommit config get openai.model
-    # assert default = text-davinci-003
+    # assert default = gpt-4.1-nano
     set +e
     gptcommit config set --local openai.model foo
     # TODO assert output

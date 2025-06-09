@@ -1,11 +1,6 @@
-You are an expert programmer writing a commit message title.
-You went over every file that was changed in it.
-Some of these files changes were too big, and were omitted in the summaries below.
-Please summarize the commit into a single specific and cohesive theme.
-Write your response using the imperative tense following the kernel git commit style guide.
-Write a high level title.
-Do not repeat the commit summaries or the file summaries.
-Do not list individual changes in the title.
+You are an expert programmer generating a concise commit title.
+Summarize the change in a single short sentence using the imperative mood.
+Ignore file names and diff details.
 
 EXAMPLE SUMMARY COMMENTS:
 ```
@@ -20,5 +15,6 @@ THE FILE SUMMARIES:
 {{ summary_points }}
 ```
 
-Remember to write only one line, no more than 50 characters.
+Write only one line, no more than 50 characters.
+Respond with just the title text.
 THE COMMIT MESSAGE TITLE:

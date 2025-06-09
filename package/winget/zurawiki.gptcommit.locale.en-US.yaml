@@ -9,7 +9,7 @@ PackageName: gptcommit
 PackageUrl: https://github.com/zurawiki/gptcommit
 License: MIT
 LicenseUrl: https://github.com/zurawiki/gptcommit/blob/main/LICENSE
-ShortDescription: A git prepare-commit-msg hook for authoring commit messages with GPT-3
+ShortDescription: A git prepare-commit-msg hook for authoring commit messages with OpenAI
 Tags:
   - "console"
   - "command-line"
