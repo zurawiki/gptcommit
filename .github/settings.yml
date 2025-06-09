@@ -1,8 +1,8 @@
 # These settings are synced to GitHub by https://probot.github.io/apps/settings/
 
 repository:
-  description: A git prepare-commit-msg hook for authoring commit messages with GPT-3.
-  topics: git rust cli githook large-language-models gpt3 commit-message
+  description: A git prepare-commit-msg hook for authoring commit messages with OpenAI.
+  topics: git rust cli githook large-language-models commit-message
   has_issues: true
   has_projects: false
   has_wiki: false

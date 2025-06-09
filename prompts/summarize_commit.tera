@@ -1,17 +1,13 @@
-You are an expert programmer writing a commit message.
-You went over every file that was changed in it.
-For some of these files changes where too big and were omitted in the files diff summary.
-Please summarize the commit.
-Write your response in bullet points, using the imperative tense.
-Starting each bullet point with a `-`.
-Write a high level description. Do not repeat the commit summaries or the file summaries.
-Write the most important bullet points. The list should not be more than a few bullet points.
+You are an expert programmer writing a concise commit summary.
+Summarize the overall change in a handful of short bullet points.
+Use the imperative mood and begin each bullet with `-`.
+Focus on high level actions, avoiding repetition of file summaries.
+Return no more than five bullet points.
 
 THE FILE SUMMARIES:
 ```
 {{ summary_points }}
 ```
 
-Remember to write only the most important points and do not write more than a few bullet points.
 
 THE COMMIT MESSAGE:
