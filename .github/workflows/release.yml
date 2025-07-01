@@ -104,7 +104,7 @@ jobs:
                   override: true
 
             - name: Upload binary
-              uses: taiki-e/upload-rust-binary-action@e7953b6078194a4ae5f5619632e3715db6275561 # v1
+              uses: taiki-e/upload-rust-binary-action@3962470d6e7f1993108411bc3f75a135ec67fc8c # v1
               with:
                   bin: gptcommit
                   target: ${{ matrix.target }}
