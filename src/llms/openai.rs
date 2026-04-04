@@ -8,6 +8,8 @@ use async_trait::async_trait;
 use reqwest::{tls, Proxy};
 use tiktoken_rs::{async_openai::get_chat_completion_max_tokens, get_completion_max_tokens};
 
+const DEFAULT_MAX_TOKENS: usize = 4096;
+
 use crate::{settings::OpenAISettings, util::HTTP_USER_AGENT};
 use async_openai::{
     config::{OpenAIConfig, OPENAI_API_BASE},
@@ -93,12 +95,27 @@ impl OpenAIClient {
     }
 
     pub(crate) fn should_use_chat_completion(model: &str) -> bool {
-        model.to_lowercase().starts_with("gpt-4")
-            || model.to_lowercase().starts_with("gpt-3.5-turbo")
+        let model = model.to_lowercase();
+        // Only use the legacy completions API for known old models
+        let legacy_models = [
+            "text-davinci",
+            "text-curie",
+            "text-babbage",
+            "text-ada",
+            "code-",
+        ];
+        !legacy_models.iter().any(|prefix| model.starts_with(prefix))
     }
 
     pub(crate) async fn get_completions(&self, prompt: &str) -> Result<String> {
-        let prompt_token_limit = get_completion_max_tokens(&self.model, prompt)?;
+        let prompt_token_limit =
+            get_completion_max_tokens(&self.model, prompt).unwrap_or_else(|_| {
+                warn!(
+                    "Unknown model '{}' for token counting, using default limit",
+                    self.model
+                );
+                DEFAULT_MAX_TOKENS
+            });
 
         if prompt_token_limit < COMPLETION_TOKEN_LIMIT {
             let error_msg =
@@ -139,7 +156,14 @@ impl OpenAIClient {
             .role(Role::User)
             .content(prompt)
             .build()?];
-        let prompt_token_limit = get_chat_completion_max_tokens(&self.model, &messages)?;
+        let prompt_token_limit = get_chat_completion_max_tokens(&self.model, &messages)
+            .unwrap_or_else(|_| {
+                warn!(
+                    "Unknown model '{}' for token counting, using default limit",
+                    self.model
+                );
+                DEFAULT_MAX_TOKENS
+            });
 
         if prompt_token_limit < COMPLETION_TOKEN_LIMIT {
             let error_msg =
