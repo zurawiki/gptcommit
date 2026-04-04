@@ -1,5 +1,4 @@
 use anyhow::Result;
-use clap::arg;
 use clap::ValueEnum;
 use colored::Colorize;
 
