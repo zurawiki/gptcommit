@@ -1,5 +1,4 @@
-use anyhow::Result;
-use clap::arg;
+use anyhow::{bail, Result};
 use clap::ValueEnum;
 use colored::Colorize;
 
@@ -54,25 +53,24 @@ pub(crate) struct PrepareCommitMsgArgs {
     #[arg(long)]
     git_diff_content: Option<PathBuf>,
 }
-fn get_llm_client(settings: &Settings) -> Box<dyn LlmClient> {
+fn get_llm_client(settings: &Settings) -> Result<Box<dyn LlmClient>> {
     match settings {
         Settings {
             model_provider: Some(ModelProvider::TesterFoobar),
             ..
-        } => Box::new(FooBarClient::new().unwrap()),
+        } => Ok(Box::new(FooBarClient::new()?)),
         Settings {
             model_provider: Some(ModelProvider::OpenAI),
             openai: Some(openai),
             ..
         } => {
-            let client = OpenAIClient::new(openai.to_owned());
-            if let Err(_e) = client {
+            let client = OpenAIClient::new(openai.to_owned()).map_err(|e| {
                 print_help_openai_api_key();
-                panic!("OpenAI API key not found in config or environment");
-            }
-            Box::new(client.unwrap())
+                e
+            })?;
+            Ok(Box::new(client))
         }
-        _ => panic!("Could not load LLM Client from config!"),
+        _ => bail!("Could not load LLM client from config. Check your model_provider setting."),
     }
 }
 
@@ -91,7 +89,7 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
         }
     };
 
-    let client = get_llm_client(&settings);
+    let client = get_llm_client(&settings)?;
     let summarization_client = SummarizationClient::new(settings.to_owned(), client)?;
 
     println!(
