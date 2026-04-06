@@ -21,18 +21,18 @@ jobs:
         if: github.ref == 'refs/heads/main'
         steps:
             - name: Checkout
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
               with:
                   persist-credentials: true
 
             - name: Install rust
-              uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
+              uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f # v1.0.6
               with:
                   toolchain: stable
                   profile: minimal
                   override: true
 
-            - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
+            - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
             - name: Publish
               run: cargo publish
@@ -43,7 +43,7 @@ jobs:
               run: |
                   git tag "${{ inputs.publish-tag }}"
                   git push origin "${{ inputs.publish-tag }}"
-            - uses: taiki-e/create-gh-release-action@26b80501670402f1999aff4b934e1574ef2d3705 # v1
+            - uses: taiki-e/create-gh-release-action@f67cf7b2dadd83d36b981e674a6b08063997ce68 # v1.10.0
               name: Create github release
               with:
                   branch: main
@@ -62,7 +62,7 @@ jobs:
             env:
                 GH_TOKEN: ${{ secrets.HOMEBREW_RELEASE_GH_TOKEN }}
           - name: Trigger Winget Build
-            uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
+            uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
             with:
               github-token: ${{ secrets.GITHUB_TOKEN }}
               script: |
@@ -92,19 +92,19 @@ jobs:
         runs-on: ${{ matrix.os || 'ubuntu-latest' }}
         steps:
             - name: Checkout
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
               with:
                   persist-credentials: false
 
             - name: Install rust
-              uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
+              uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f # v1.0.6
               with:
                   toolchain: stable
                   profile: minimal
                   override: true
 
             - name: Upload binary
-              uses: taiki-e/upload-rust-binary-action@e7953b6078194a4ae5f5619632e3715db6275561 # v1
+              uses: taiki-e/upload-rust-binary-action@10c1cf6a3da113ad4e60018e386570529aa5f1d3 # v1.30.0
               with:
                   bin: gptcommit
                   target: ${{ matrix.target }}
