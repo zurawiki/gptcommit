@@ -1124,6 +1124,7 @@ dependencies = [
  "colored 2.2.0",
  "config",
  "dirs",
+ "ignore",
  "lazy_static",
  "log",
  "regex",

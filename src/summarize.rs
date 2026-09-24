@@ -6,7 +6,8 @@ use crate::llms::llm_client::LlmClient;
 use crate::settings::Settings;
 use crate::util;
 use crate::{prompt::format_prompt, settings::Language};
-use anyhow::Result;
+use anyhow::{Context as _, Result};
+use ignore::gitignore::{Gitignore, GitignoreBuilder};
 
 use tokio::task::JoinSet;
 use tokio::try_join;
@@ -17,7 +18,7 @@ use tera::{Context, Tera};
 pub(crate) struct SummarizationClient {
     client: Arc<dyn LlmClient>,
 
-    file_ignore: Vec<String>,
+    file_ignore: Gitignore,
     prompt_file_diff: String,
     prompt_conventional_commit_prefix: String,
     prompt_commit_summary: String,
@@ -49,7 +50,13 @@ impl SummarizationClient {
         let output_lang =
             Language::from_str(&output_settings.lang.unwrap_or_default()).unwrap_or_default();
         let output_show_per_file_summary = output_settings.show_per_file_summary.unwrap_or(false);
-        let file_ignore = settings.file_ignore.unwrap_or_default();
+        let mut ignore_builder = GitignoreBuilder::new("");
+        for pattern in settings.file_ignore.unwrap_or_default() {
+            ignore_builder
+                .add_line(None, &pattern)
+                .with_context(|| format!("Invalid file_ignore pattern: {pattern}"))?;
+        }
+        let file_ignore = ignore_builder.build()?;
         Ok(Self {
             client: client.into(),
             file_ignore,
@@ -132,12 +139,14 @@ impl SummarizationClient {
     /// https://git-scm.com/docs/git-diff
     async fn process_file_diff(&self, file_diff: &str) -> Option<(String, String)> {
         if let Some(file_name) = util::get_file_name_from_diff(file_diff) {
-            if self
+            if let ignore::Match::Ignore(rule) = self
                 .file_ignore
-                .iter()
-                .any(|ignore| file_name.contains(ignore))
+                .matched_path_or_any_parents(file_name, false)
             {
-                warn!("skipping {file_name} due to file_ignore setting");
+                warn!(
+                    "skipping {file_name}: file_ignore pattern {:?}",
+                    rule.original()
+                );
 
                 return None;
             }
@@ -210,5 +219,74 @@ impl SummarizationClient {
             ]),
         )?;
         self.client.completions(&prompt).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::llms::tester_foobar::FooBarClient;
+
+    fn client(patterns: &[&str]) -> Result<SummarizationClient> {
+        SummarizationClient::new(
+            Settings {
+                file_ignore: Some(patterns.iter().map(|pattern| pattern.to_string()).collect()),
+                ..Default::default()
+            },
+            Box::new(FooBarClient::new()?),
+        )
+    }
+
+    #[tokio::test]
+    async fn filters_diffs_using_git_style_patterns() {
+        let client = client(&[
+            "Cargo.lock",
+            "/generated/",
+            "**/*.min.js",
+            "vendor/*",
+            "!vendor/README.md",
+        ])
+        .unwrap();
+        for (path, ignored) in [
+            ("Cargo.lock", true),
+            ("crates/tool/Cargo.lock", true),
+            ("Cargo.lock.backup", false),
+            ("generated/data.rs", true),
+            ("src/generated/data.rs", false),
+            ("app.min.js", true),
+            ("assets/app.min.js", true),
+            ("assets/app.js", false),
+            ("vendor/library.rs", true),
+            ("vendor/README.md", false),
+        ] {
+            let diff = format!("diff --git a/{path} b/{path}\n");
+            assert_eq!(
+                client.process_file_diff(&diff).await.is_none(),
+                ignored,
+                "{path}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn later_rules_override_earlier_rules() {
+        let diff = "diff --git a/keep.lock b/keep.lock\n";
+        assert!(client(&["*.lock", "!keep.lock"])
+            .unwrap()
+            .process_file_diff(diff)
+            .await
+            .is_some());
+        assert!(client(&["!keep.lock", "*.lock"])
+            .unwrap()
+            .process_file_diff(diff)
+            .await
+            .is_none());
+        assert!(client(&[]).unwrap().process_file_diff(diff).await.is_some());
+    }
+
+    #[test]
+    fn rejects_invalid_patterns_with_context() {
+        let error = client(&["[z-a]"]).unwrap_err().to_string();
+        assert!(error.contains("Invalid file_ignore pattern: [z-a]"));
     }
 }
