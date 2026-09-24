@@ -6,7 +6,7 @@ use std::time::Duration;
 use async_trait::async_trait;
 
 use reqwest::{tls, Proxy};
-use tiktoken_rs::{get_chat_completion_max_tokens, get_completion_max_tokens};
+use tiktoken_rs::{get_chat_completion_max_tokens, get_text_completion_max_tokens};
 
 const DEFAULT_MAX_TOKENS: usize = 4096;
 
@@ -112,8 +112,8 @@ impl OpenAIClient {
     }
 
     pub(crate) async fn get_completions(&self, prompt: &str) -> Result<String> {
-        let prompt_token_limit =
-            get_completion_max_tokens(&self.model, prompt).unwrap_or_else(|_| {
+        let prompt_token_limit = get_text_completion_max_tokens(&self.model, prompt)
+            .unwrap_or_else(|_| {
                 debug!(
                     "Unknown model '{}' for token counting, using default limit",
                     self.model
@@ -292,6 +292,8 @@ mod tests {
     async fn completion_routes_preserve_request_and_response() {
         for (model, chat, path) in [
             (DEFAULT_OPENAI_MODEL, true, "/chat/completions"),
+            ("gpt-4.1", true, "/chat/completions"),
+            ("gpt-5.4", true, "/chat/completions"),
             ("custom-chat-model", true, "/chat/completions"),
             ("text-davinci-003", false, "/completions"),
         ] {
@@ -327,6 +329,24 @@ mod tests {
                 assert_eq!(requests[0].1["prompt"], "test prompt");
                 assert_eq!(requests[0].1["temperature"], 0.5);
             }
+        }
+    }
+
+    #[tokio::test]
+    async fn oversized_prompts_are_rejected_before_requesting_completions() {
+        for model in ["gpt-4o", "text-davinci-003"] {
+            let client = OpenAIClient::new(OpenAISettings {
+                api_base: Some("http://127.0.0.1:1".to_string()),
+                model: Some(model.to_string()),
+                retries: Some(0),
+                ..Default::default()
+            })
+            .unwrap();
+            let error = client
+                .completions(&"word ".repeat(130_000))
+                .await
+                .unwrap_err();
+            assert!(error.to_string().contains("diff is too large"), "{error}");
         }
     }
 
