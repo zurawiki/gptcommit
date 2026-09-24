@@ -53,6 +53,25 @@ Configs are applied in the following order:
 
 See all the config options available with `gptcommit config keys`.
 
+### Ignore generated files
+
+`file_ignore` uses Git-style patterns matched against repository-relative paths.
+For example, `Cargo.lock` matches that filename at any depth, `/generated/`
+matches a root directory, and `**/*.min.js` matches minified JavaScript.
+Later matching patterns take precedence; `!` re-includes a matching file.
+Skipped files and the matching rule are reported when generating a message.
+
+Set the array in your user or repository config:
+
+```toml
+file_ignore = ["Cargo.lock", "**/*.min.js", "vendor/*", "!vendor/README.md"]
+```
+
+These rules are separate from Git's own ignore files: staged files are selected
+using `file_ignore`, not by reading `.gitignore`. Existing substring rules need
+explicit wildcards: use `*lock*` to match names containing `lock`; `lock` now
+matches only that complete filename or directory name.
+
 ### Set your OpenAI API key
 
 Persist your OpenAI key
