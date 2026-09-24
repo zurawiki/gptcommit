@@ -220,18 +220,21 @@ pub(crate) struct Settings {
 }
 
 impl Settings {
-    pub fn from_clear(key: &str) -> Result<Self, ConfigError> {
-        let mut settings = Self::get_config_builder()?;
-        settings = settings.set_override(key, None::<Option<String>>)?;
-        settings.build()?.try_deserialize()
-    }
-
     pub fn from_set_override(key: &str, value: &str) -> Result<Self, ConfigError> {
         if key == "output.lang" && Language::from_str(value).is_err() {
             return Err(ConfigError::Message(format!("Invalid language: {value}.",)));
         }
-        let mut settings = Self::get_config_builder()?;
-        settings = settings.set_override(key, value)?;
+        let mut settings = Config::builder();
+        if key == "file_ignore" {
+            let parsed: Vec<String> =
+                toml::from_str::<HashMap<String, Vec<String>>>(&format!("file_ignore = {value}"))
+                    .map_err(|error| ConfigError::Message(error.to_string()))?
+                    .remove("file_ignore")
+                    .unwrap_or_default();
+            settings = settings.set_override(key, parsed)?;
+        } else {
+            settings = settings.set_override(key, value)?;
+        }
         settings.build()?.try_deserialize()
     }
 

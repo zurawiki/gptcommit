@@ -65,6 +65,18 @@ Configs are applied in the following order:
 
 See all the config options available with `gptcommit config keys`.
 
+`config set` and `config delete` edit only the selected key in the user config,
+or the repository config with `--local`, preserving other entries and comments.
+Deleting an override restores the value from lower-priority configuration.
+`config get` prints strings without quotes and other values as TOML.
+
+```sh
+gptcommit config set --local openai.retries 2
+gptcommit config get openai.retries
+gptcommit config set --local file_ignore '["Cargo.lock", "yarn.lock"]'
+gptcommit config delete --local openai.retries
+```
+
 ### Ignore generated files
 
 `file_ignore` uses Git-style patterns matched against repository-relative paths.
