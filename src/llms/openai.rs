@@ -128,10 +128,10 @@ impl OpenAIClient {
             .model(&self.model)
             .prompt(prompt)
             .max_tokens(prompt_token_limit as u16)
-            .temperature(0.5)
-            .top_p(1.)
-            .frequency_penalty(0.)
-            .presence_penalty(0.)
+            .temperature(0.5_f32)
+            .top_p(1.0_f32)
+            .frequency_penalty(0.0_f32)
+            .presence_penalty(0.0_f32)
             .build()?;
 
         debug!("Sending request to OpenAI:\n{:?}", request);
