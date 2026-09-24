@@ -184,8 +184,8 @@ impl OpenAIClient {
         request.model(&self.model).messages(message);
         if self.model == DEFAULT_OPENAI_MODEL {
             request
-                .reasoning_effort(ReasoningEffort::None)
-                .max_completion_tokens(512_u32);
+                .reasoning_effort(ReasoningEffort::Low)
+                .max_completion_tokens(2048_u32);
         }
         let request = request.build()?;
 
@@ -312,8 +312,8 @@ mod tests {
             assert_eq!(requests[0].0, format!("POST {path} HTTP/1.1"));
             assert_eq!(requests[0].1["model"], model);
             if model == DEFAULT_OPENAI_MODEL {
-                assert_eq!(requests[0].1["reasoning_effort"], "none");
-                assert_eq!(requests[0].1["max_completion_tokens"], 512);
+                assert_eq!(requests[0].1["reasoning_effort"], "low");
+                assert_eq!(requests[0].1["max_completion_tokens"], 2048);
             } else {
                 assert!(requests[0].1.get("reasoning_effort").is_none());
                 assert!(requests[0].1.get("max_completion_tokens").is_none());

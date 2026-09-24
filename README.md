@@ -40,8 +40,9 @@ gptcommit install
 
 To use `gptcommit`, simply run `git commit` as you normally would. The hook will automatically generate a commit message for you using a large language model like GPT. If you're not satisfied with the generated message, you can always edit it before committing.
 
-By default, `gptcommit` uses `gpt-6-luna` with reasoning disabled and a 512-token
-output limit per request. The default model is intended for focused commit
+By default, `gptcommit` uses `gpt-6-luna` with low reasoning effort to prioritize
+speed, and a 2,048-token limit shared by reasoning and output per request.
+The default model is intended for focused commit
 summaries; you can override it with `openai.model`. Existing model overrides are
 preserved. Please ensure your OpenAI account has access and sufficient credits.
 
