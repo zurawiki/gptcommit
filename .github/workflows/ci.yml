@@ -31,19 +31,19 @@ jobs:
         env:
             CARGO_BUILD_TARGET: ${{ matrix.target }}
         steps:
-            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Install rust
-              uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f # v1.0.6
+              uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
               with:
                   target: ${{ matrix.target }}
                   toolchain: stable
-                  profile: minimal
-                  override: true
+                  cache: false
+                  build-warnings: warn
 
-            - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+            - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
 
-            - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+            - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -54,18 +54,19 @@ jobs:
     lint:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Install rust
-              uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f # v1.0.6
+              uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
               with:
                   toolchain: stable
-                  override: true
+                  cache: false
+                  build-warnings: warn
                   components: rustfmt, clippy
 
-            - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+            - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
 
-            - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+            - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -91,6 +92,7 @@ jobs:
             publish-tag: ${{ needs.should-publish.outputs.publish-tag }}
         secrets:
             CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+            HOMEBREW_RELEASE_GH_TOKEN: ${{ secrets.HOMEBREW_RELEASE_GH_TOKEN }}
 
     should-publish:
         name: Check if version changed
@@ -100,18 +102,18 @@ jobs:
             publish-tag: ${{ steps.tag.outputs.tag }}
         steps:
             - name: Checkout
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
 
             - name: Install rust
-              uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f # v1.0.6
+              uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
               with:
                   toolchain: stable
-                  profile: minimal
-                  override: true
+                  cache: false
+                  build-warnings: warn
 
-            - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+            - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
 
             - id: check
               run: |
@@ -120,9 +122,9 @@ jobs:
                   export EXIT_CODE="$?"
                   set -e
                   if [[ "$EXIT_CODE" == "7" ]]; then
-                    echo "is_new_version=no" >> $GITHUB_OUTPUT
+                    echo "is_new_version=no" >> "$GITHUB_OUTPUT"
                   elif [[ "$EXIT_CODE" == "0" ]]; then
-                    echo "is_new_version=yes" >> $GITHUB_OUTPUT
+                    echo "is_new_version=yes" >> "$GITHUB_OUTPUT"
                   else
                     # Unexpected outcome, indicates a bug.
                     exit "$EXIT_CODE"
@@ -131,5 +133,5 @@ jobs:
             - name: Determine the tag name
               id: tag
               run: |
-                  export TAG_NAME="v$(./scripts/get_current_version.sh gptcommit)"
-                  echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+                  TAG_NAME="v$(./scripts/get_current_version.sh gptcommit)"
+                  echo "tag=$TAG_NAME" >> "$GITHUB_OUTPUT"
