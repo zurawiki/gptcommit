@@ -8,6 +8,7 @@ categories = ["development-tools"]
 keywords = ["openai", "githook", "git", "ai", "gpt"]
 description = "A git prepare-commit-msg hook for summarizing commits with LLMs."
 readme = "README.md"
+exclude = [".claude/"]
 license = "MIT"
 homepage = "https://github.com/zurawiki/gptcommit"
 repository = "https://github.com/zurawiki/gptcommit"
