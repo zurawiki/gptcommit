@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -6,19 +6,42 @@ use crate::llms::llm_client::LlmClient;
 use crate::settings::Settings;
 use crate::util;
 use crate::{prompt::format_prompt, settings::Language};
-use anyhow::{Context as _, Result};
-use ignore::gitignore::{Gitignore, GitignoreBuilder};
+use anyhow::{bail, Context as _, Result};
+use ignore::gitignore::GitignoreBuilder;
 
 use tokio::task::JoinSet;
 use tokio::try_join;
 
 use tera::{Context, Tera};
 
+pub(crate) fn filter_diffs<'a>(patterns: &[String], diffs: Vec<&'a str>) -> Result<Vec<&'a str>> {
+    let mut builder = GitignoreBuilder::new("");
+    for pattern in patterns {
+        builder
+            .add_line(None, pattern)
+            .with_context(|| format!("Invalid file_ignore pattern: {pattern}"))?;
+    }
+    let matcher = builder.build()?;
+    Ok(diffs
+        .into_iter()
+        .filter(|diff| {
+            let Some(name) = util::get_file_name_from_diff(diff) else {
+                return false;
+            };
+            if let ignore::Match::Ignore(rule) = matcher.matched_path_or_any_parents(name, false) {
+                info!("skipping {name}: file_ignore pattern {:?}", rule.original());
+                false
+            } else {
+                true
+            }
+        })
+        .collect())
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct SummarizationClient {
     client: Arc<dyn LlmClient>,
 
-    file_ignore: Gitignore,
     prompt_file_diff: String,
     prompt_conventional_commit_prefix: String,
     prompt_commit_summary: String,
@@ -50,16 +73,8 @@ impl SummarizationClient {
         let output_lang =
             Language::from_str(&output_settings.lang.unwrap_or_default()).unwrap_or_default();
         let output_show_per_file_summary = output_settings.show_per_file_summary.unwrap_or(false);
-        let mut ignore_builder = GitignoreBuilder::new("");
-        for pattern in settings.file_ignore.unwrap_or_default() {
-            ignore_builder
-                .add_line(None, &pattern)
-                .with_context(|| format!("Invalid file_ignore pattern: {pattern}"))?;
-        }
-        let file_ignore = ignore_builder.build()?;
         Ok(Self {
             client: client.into(),
-            file_ignore,
             prompt_file_diff,
             prompt_conventional_commit_prefix,
             prompt_commit_summary,
@@ -73,19 +88,28 @@ impl SummarizationClient {
     }
 
     pub(crate) async fn get_commit_message(&self, file_diffs: Vec<&str>) -> Result<String> {
-        let mut set = JoinSet::new();
+        let mut set: JoinSet<Result<Option<(String, String)>>> = JoinSet::new();
+        let mut summary_for_file = BTreeMap::new();
 
         for file_diff in file_diffs {
+            if set.len() == 4 {
+                if let Some((name, summary)) = set.join_next().await.unwrap()?? {
+                    summary_for_file.insert(name, summary);
+                }
+            }
             let file_diff = file_diff.to_owned();
             let cloned_self = self.clone();
             set.spawn(async move { cloned_self.process_file_diff(&file_diff).await });
         }
 
-        let mut summary_for_file: HashMap<String, String> = HashMap::with_capacity(set.len());
         while let Some(res) = set.join_next().await {
-            if let Some((k, v)) = res.unwrap() {
+            if let Some((k, v)) = res?? {
                 summary_for_file.insert(k, v);
             }
+        }
+
+        if summary_for_file.is_empty() {
+            bail!("No files to summarize.");
         }
 
         let summary_points = &summary_for_file
@@ -137,26 +161,15 @@ impl SummarizationClient {
     /// The function assumes that the file_diff input is well-formed
     /// according to the Diff format described in the Git documentation:
     /// https://git-scm.com/docs/git-diff
-    async fn process_file_diff(&self, file_diff: &str) -> Option<(String, String)> {
+    async fn process_file_diff(&self, file_diff: &str) -> Result<Option<(String, String)>> {
         if let Some(file_name) = util::get_file_name_from_diff(file_diff) {
-            if let ignore::Match::Ignore(rule) = self
-                .file_ignore
-                .matched_path_or_any_parents(file_name, false)
-            {
-                warn!(
-                    "skipping {file_name}: file_ignore pattern {:?}",
-                    rule.original()
-                );
-
-                return None;
-            }
-            let completion = self.diff_summary(file_name, file_diff).await;
-            Some((
-                file_name.to_string(),
-                completion.unwrap_or_else(|_| "".to_string()),
-            ))
+            let completion = self
+                .diff_summary(file_name, file_diff)
+                .await
+                .with_context(|| format!("Could not summarize {file_name}"))?;
+            Ok(Some((file_name.to_string(), completion)))
         } else {
-            None
+            Ok(None)
         }
     }
 
@@ -225,28 +238,98 @@ impl SummarizationClient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::llms::tester_foobar::FooBarClient;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
-    fn client(patterns: &[&str]) -> Result<SummarizationClient> {
-        SummarizationClient::new(
-            Settings {
-                file_ignore: Some(patterns.iter().map(|pattern| pattern.to_string()).collect()),
-                ..Default::default()
-            },
-            Box::new(FooBarClient::new()?),
-        )
+    #[derive(Debug, Default)]
+    struct Calls {
+        active: AtomicUsize,
+        peak: AtomicUsize,
+        total: AtomicUsize,
+    }
+
+    #[derive(Debug)]
+    struct RecordingClient {
+        calls: Arc<Calls>,
+        fail: bool,
+    }
+
+    #[async_trait::async_trait]
+    impl LlmClient for RecordingClient {
+        async fn completions(&self, _prompt: &str) -> Result<String> {
+            self.calls.total.fetch_add(1, Ordering::SeqCst);
+            let active = self.calls.active.fetch_add(1, Ordering::SeqCst) + 1;
+            self.calls.peak.fetch_max(active, Ordering::SeqCst);
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            self.calls.active.fetch_sub(1, Ordering::SeqCst);
+            if self.fail {
+                bail!("test provider failure");
+            }
+            Ok("summary".to_string())
+        }
     }
 
     #[tokio::test]
-    async fn filters_diffs_using_git_style_patterns() {
-        let client = client(&[
+    async fn bounds_concurrency_and_stops_on_incomplete_summaries() {
+        for fail in [false, true] {
+            let calls = Arc::new(Calls::default());
+            let client = SummarizationClient::new(
+                Settings::default(),
+                Box::new(RecordingClient {
+                    calls: calls.clone(),
+                    fail,
+                }),
+            )
+            .unwrap();
+            let diffs = (0..8)
+                .map(|i| format!("diff --git a/file{i} b/file{i}\n"))
+                .collect::<Vec<_>>();
+            let result = client
+                .get_commit_message(diffs.iter().map(String::as_str).collect())
+                .await;
+            assert_eq!(calls.peak.load(Ordering::SeqCst), 4);
+            if fail {
+                assert!(result
+                    .unwrap_err()
+                    .to_string()
+                    .contains("Could not summarize file"));
+                assert_eq!(calls.total.load(Ordering::SeqCst), 4);
+            } else {
+                assert!(result.is_ok());
+                assert_eq!(calls.total.load(Ordering::SeqCst), 11);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn empty_input_makes_no_requests() {
+        let calls = Arc::new(Calls::default());
+        let client = SummarizationClient::new(
+            Settings::default(),
+            Box::new(RecordingClient {
+                calls: calls.clone(),
+                fail: false,
+            }),
+        )
+        .unwrap();
+        assert!(client.get_commit_message(vec![]).await.is_err());
+        assert_eq!(calls.total.load(Ordering::SeqCst), 0);
+    }
+    fn filter<'a>(patterns: &[&str], diffs: Vec<&'a str>) -> Result<Vec<&'a str>> {
+        filter_diffs(
+            &patterns.iter().map(|p| p.to_string()).collect::<Vec<_>>(),
+            diffs,
+        )
+    }
+
+    #[test]
+    fn filters_diffs_using_git_style_patterns() {
+        let patterns = &[
             "Cargo.lock",
             "/generated/",
             "**/*.min.js",
             "vendor/*",
             "!vendor/README.md",
-        ])
-        .unwrap();
+        ];
         for (path, ignored) in [
             ("Cargo.lock", true),
             ("crates/tool/Cargo.lock", true),
@@ -261,32 +344,30 @@ mod tests {
         ] {
             let diff = format!("diff --git a/{path} b/{path}\n");
             assert_eq!(
-                client.process_file_diff(&diff).await.is_none(),
+                filter(patterns, vec![&diff]).unwrap().is_empty(),
                 ignored,
                 "{path}"
             );
         }
     }
 
-    #[tokio::test]
-    async fn later_rules_override_earlier_rules() {
+    #[test]
+    fn later_rules_override_earlier_rules() {
         let diff = "diff --git a/keep.lock b/keep.lock\n";
-        assert!(client(&["*.lock", "!keep.lock"])
+        assert_eq!(
+            filter(&["*.lock", "!keep.lock"], vec![diff]).unwrap(),
+            vec![diff]
+        );
+        assert!(filter(&["!keep.lock", "*.lock"], vec![diff])
             .unwrap()
-            .process_file_diff(diff)
-            .await
-            .is_some());
-        assert!(client(&["!keep.lock", "*.lock"])
-            .unwrap()
-            .process_file_diff(diff)
-            .await
-            .is_none());
-        assert!(client(&[]).unwrap().process_file_diff(diff).await.is_some());
+            .is_empty());
+        assert_eq!(filter(&[], vec![diff]).unwrap(), vec![diff]);
+        assert!(filter(&[], vec![""]).unwrap().is_empty());
     }
 
     #[test]
     fn rejects_invalid_patterns_with_context() {
-        let error = client(&["[z-a]"]).unwrap_err().to_string();
+        let error = filter(&["[z-a]"], vec![]).unwrap_err().to_string();
         assert!(error.contains("Invalid file_ignore pattern: [z-a]"));
     }
 }

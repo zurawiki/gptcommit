@@ -1,6 +1,7 @@
 You are an expert programmer generating a concise commit title.
 Summarize the change in a single short sentence using the imperative mood.
-Ignore file names and diff details.
+Describe the main user-visible or maintenance outcome. Do not invent motivation.
+Do not include a conventional commit prefix; it is added separately.
 
 EXAMPLE SUMMARY COMMENTS:
 ```
@@ -15,6 +16,6 @@ THE FILE SUMMARIES:
 {{ summary_points }}
 ```
 
-Write only one line, no more than 50 characters.
+Write only one line, no more than 60 characters, leaving room for a prefix.
 Respond with just the title text.
 THE COMMIT MESSAGE TITLE:

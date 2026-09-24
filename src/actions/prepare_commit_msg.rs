@@ -1,6 +1,5 @@
 use anyhow::{bail, Result};
 use clap::ValueEnum;
-use colored::Colorize;
 
 use clap::Args;
 use strum_macros::Display;
@@ -16,7 +15,7 @@ use crate::llms::{llm_client::LlmClient, openai::OpenAIClient};
 use crate::settings::ModelProvider;
 
 use crate::settings::Settings;
-use crate::summarize::SummarizationClient;
+use crate::summarize::{filter_diffs, SummarizationClient};
 use crate::util::SplitPrefixInclusive;
 
 use crate::llms::tester_foobar::FooBarClient;
@@ -77,26 +76,17 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
     match (args.commit_source, settings.allow_amend) {
         (CommitSource::Empty, _) | (CommitSource::Commit, Some(true)) => {}
         (CommitSource::Commit, _) => {
-            println!("🤖 Skipping gptcommit since we're amending a commit. Change this behavior with `gptcommit config set allow_amend true`");
+            info!("Skipping gptcommit since we're amending a commit. Change this behavior with `gptcommit config set allow_amend true`");
             return Ok(());
         }
         _ => {
-            println!(
-                "🤖 Skipping gptcommit because the githook isn't set up for the \"{}\" commit mode.", args.commit_source
+            info!(
+                "Skipping gptcommit because the githook isn't set up for the \"{}\" commit mode.",
+                args.commit_source
             );
             return Ok(());
         }
     };
-
-    let client = get_llm_client(&settings)?;
-    let summarization_client = SummarizationClient::new(settings.to_owned(), client)?;
-
-    println!(
-        "{}",
-        "🤖 Let's ask OpenAI to summarize those diffs! 🚀"
-            .green()
-            .bold()
-    );
 
     let output = if let Some(git_diff_output) = args.git_diff_content {
         fs::read_to_string(git_diff_output)?
@@ -104,7 +94,20 @@ pub(crate) async fn main(settings: Settings, args: PrepareCommitMsgArgs) -> Resu
         git::get_diffs()?
     };
 
-    let file_diffs = output.split_prefix_inclusive("\ndiff --git ");
+    let file_diffs = filter_diffs(
+        settings.file_ignore.as_deref().unwrap_or_default(),
+        output.split_prefix_inclusive("\ndiff --git "),
+    )?;
+    if file_diffs.is_empty() {
+        info!("No eligible staged changes; leaving the commit message unchanged.");
+        return Ok(());
+    }
+    info!(
+        "Generating a commit message for {} file(s)",
+        file_diffs.len()
+    );
+    let client = get_llm_client(&settings)?;
+    let summarization_client = SummarizationClient::new(settings.to_owned(), client)?;
     let commit_message = summarization_client.get_commit_message(file_diffs).await?;
 
     // prepend output to commit message

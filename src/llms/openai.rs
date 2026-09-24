@@ -10,12 +10,17 @@ use tiktoken_rs::{get_chat_completion_max_tokens, get_completion_max_tokens};
 
 const DEFAULT_MAX_TOKENS: usize = 4096;
 
-use crate::{settings::OpenAISettings, util::HTTP_USER_AGENT};
+use crate::{
+    settings::{OpenAISettings, DEFAULT_OPENAI_MODEL},
+    util::HTTP_USER_AGENT,
+};
 use async_openai::{
     config::{OpenAIConfig, OPENAI_API_BASE},
     middleware::{retry::OpenAIRetryLayer, ReqwestService},
     types::{
-        chat::{ChatCompletionRequestUserMessageArgs, CreateChatCompletionRequestArgs},
+        chat::{
+            ChatCompletionRequestUserMessageArgs, CreateChatCompletionRequestArgs, ReasoningEffort,
+        },
         completions::CreateCompletionRequestArgs,
     },
     Client,
@@ -109,7 +114,7 @@ impl OpenAIClient {
     pub(crate) async fn get_completions(&self, prompt: &str) -> Result<String> {
         let prompt_token_limit =
             get_completion_max_tokens(&self.model, prompt).unwrap_or_else(|_| {
-                warn!(
+                debug!(
                     "Unknown model '{}' for token counting, using default limit",
                     self.model
                 );
@@ -161,7 +166,7 @@ impl OpenAIClient {
         }];
         let prompt_token_limit = get_chat_completion_max_tokens(&self.model, &token_messages)
             .unwrap_or_else(|_| {
-                warn!(
+                debug!(
                     "Unknown model '{}' for token counting, using default limit",
                     self.model
                 );
@@ -175,10 +180,14 @@ impl OpenAIClient {
             bail!(error_msg)
         }
 
-        let request = CreateChatCompletionRequestArgs::default()
-            .model(&self.model)
-            .messages(message)
-            .build()?;
+        let mut request = CreateChatCompletionRequestArgs::default();
+        request.model(&self.model).messages(message);
+        if self.model == DEFAULT_OPENAI_MODEL {
+            request
+                .reasoning_effort(ReasoningEffort::None)
+                .max_completion_tokens(512_u32);
+        }
+        let request = request.build()?;
 
         let response = self.client.chat().create(request).await?;
 
@@ -282,6 +291,7 @@ mod tests {
     #[tokio::test]
     async fn completion_routes_preserve_request_and_response() {
         for (model, chat, path) in [
+            (DEFAULT_OPENAI_MODEL, true, "/chat/completions"),
             ("custom-chat-model", true, "/chat/completions"),
             ("text-davinci-003", false, "/completions"),
         ] {
@@ -301,6 +311,13 @@ mod tests {
             let requests = server.await.unwrap();
             assert_eq!(requests[0].0, format!("POST {path} HTTP/1.1"));
             assert_eq!(requests[0].1["model"], model);
+            if model == DEFAULT_OPENAI_MODEL {
+                assert_eq!(requests[0].1["reasoning_effort"], "none");
+                assert_eq!(requests[0].1["max_completion_tokens"], 512);
+            } else {
+                assert!(requests[0].1.get("reasoning_effort").is_none());
+                assert!(requests[0].1.get("max_completion_tokens").is_none());
+            }
             if chat {
                 assert_eq!(
                     requests[0].1["messages"],
