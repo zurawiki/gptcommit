@@ -49,14 +49,16 @@ jobs:
               name: Create github release
               with:
                   branch: main
+                  changelog: CHANGELOG.md
                   ref: refs/tags/${{ inputs.publish-tag }}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     trigger-homebrew:
-        name: Trigger Homebrew release
+        name: Trigger package manager updates
         needs:
             - create-release
+            - upload-binary
         runs-on: ubuntu-latest
         steps:
           - name: Trigger homebrew release
