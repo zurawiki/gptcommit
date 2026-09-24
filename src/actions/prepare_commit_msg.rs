@@ -64,9 +64,8 @@ fn get_llm_client(settings: &Settings) -> Result<Box<dyn LlmClient>> {
             openai: Some(openai),
             ..
         } => {
-            let client = OpenAIClient::new(openai.to_owned()).map_err(|e| {
+            let client = OpenAIClient::new(openai.to_owned()).inspect_err(|_| {
                 print_help_openai_api_key();
-                e
             })?;
             Ok(Box::new(client))
         }

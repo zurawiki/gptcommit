@@ -6,16 +6,17 @@ use std::time::Duration;
 use async_trait::async_trait;
 
 use reqwest::{tls, Proxy};
-use tiktoken_rs::{async_openai::get_chat_completion_max_tokens, get_completion_max_tokens};
+use tiktoken_rs::{get_chat_completion_max_tokens, get_completion_max_tokens};
 
 const DEFAULT_MAX_TOKENS: usize = 4096;
 
 use crate::{settings::OpenAISettings, util::HTTP_USER_AGENT};
 use async_openai::{
     config::{OpenAIConfig, OPENAI_API_BASE},
+    middleware::{retry::OpenAIRetryLayer, ReqwestService},
     types::{
-        ChatCompletionRequestMessageArgs, CreateChatCompletionRequestArgs,
-        CreateCompletionRequestArgs, Role,
+        chat::{ChatCompletionRequestUserMessageArgs, CreateChatCompletionRequestArgs},
+        completions::CreateCompletionRequestArgs,
     },
     Client,
 };
@@ -80,14 +81,12 @@ impl OpenAIClient {
                 http_client = http_client.proxy(Proxy::all(proxy)?);
             }
         }
-        openai_client = openai_client.with_http_client(http_client.build()?);
-
-        if settings.retries.unwrap_or_default() > 0 {
-            let backoff = backoff::ExponentialBackoffBuilder::new()
-                .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
-                .build();
-            openai_client = openai_client.with_backoff(backoff);
-        }
+        let service = tower::ServiceBuilder::new()
+            .layer(OpenAIRetryLayer::new(usize::from(
+                settings.retries.unwrap_or_default(),
+            )))
+            .service(ReqwestService::new(http_client.build()?));
+        openai_client = openai_client.with_http_service(service);
         Ok(Self {
             model,
             client: openai_client,
@@ -127,7 +126,7 @@ impl OpenAIClient {
         let request = CreateCompletionRequestArgs::default()
             .model(&self.model)
             .prompt(prompt)
-            .max_tokens(prompt_token_limit as u16)
+            .max_tokens(prompt_token_limit as u32)
             .temperature(0.5_f32)
             .top_p(1.0_f32)
             .frequency_penalty(0.0_f32)
@@ -152,11 +151,15 @@ impl OpenAIClient {
     }
 
     pub(crate) async fn get_chat_completions(&self, prompt: &str) -> Result<String> {
-        let messages = [ChatCompletionRequestMessageArgs::default()
-            .role(Role::User)
+        let message = ChatCompletionRequestUserMessageArgs::default()
             .content(prompt)
-            .build()?];
-        let prompt_token_limit = get_chat_completion_max_tokens(&self.model, &messages)
+            .build()?;
+        let token_messages = [tiktoken_rs::ChatCompletionRequestMessage {
+            role: "user".to_string(),
+            content: Some(prompt.to_string()),
+            ..Default::default()
+        }];
+        let prompt_token_limit = get_chat_completion_max_tokens(&self.model, &token_messages)
             .unwrap_or_else(|_| {
                 warn!(
                     "Unknown model '{}' for token counting, using default limit",
@@ -174,7 +177,7 @@ impl OpenAIClient {
 
         let request = CreateChatCompletionRequestArgs::default()
             .model(&self.model)
-            .messages(messages)
+            .messages(message)
             .build()?;
 
         let response = self.client.chat().create(request).await?;
@@ -208,5 +211,129 @@ impl LlmClient for OpenAIClient {
             self.get_completions(prompt).await?
         };
         Ok(completion.trim().to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{json, Value};
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+    async fn serve(
+        responses: Vec<(u16, Value)>,
+    ) -> (String, tokio::task::JoinHandle<Vec<(String, Value)>>) {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = format!("http://{}", listener.local_addr().unwrap());
+        let task = tokio::spawn(async move {
+            let mut requests = Vec::new();
+            for (status, body) in responses {
+                let (mut socket, _) = listener.accept().await.unwrap();
+                let mut bytes = Vec::new();
+                let (headers, body_start, length) = loop {
+                    let mut buffer = [0; 4096];
+                    let read = socket.read(&mut buffer).await.unwrap();
+                    assert_ne!(read, 0);
+                    bytes.extend_from_slice(&buffer[..read]);
+                    if let Some(end) = bytes.windows(4).position(|w| w == b"\r\n\r\n") {
+                        let headers = String::from_utf8(bytes[..end].to_vec()).unwrap();
+                        let length = headers
+                            .lines()
+                            .find_map(|line| {
+                                let (name, value) = line.split_once(':')?;
+                                name.eq_ignore_ascii_case("content-length")
+                                    .then(|| value.trim().parse::<usize>().unwrap())
+                            })
+                            .unwrap();
+                        break (headers, end + 4, length);
+                    }
+                };
+                while bytes.len() < body_start + length {
+                    let mut buffer = [0; 4096];
+                    let read = socket.read(&mut buffer).await.unwrap();
+                    assert_ne!(read, 0);
+                    bytes.extend_from_slice(&buffer[..read]);
+                }
+                requests.push((
+                    headers.lines().next().unwrap().to_string(),
+                    serde_json::from_slice(&bytes[body_start..body_start + length]).unwrap(),
+                ));
+                let body = body.to_string();
+                let response = format!(
+                    "HTTP/1.1 {status} Test\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\nRetry-After: 0\r\n\r\n{body}",
+                    body.len()
+                );
+                socket.write_all(response.as_bytes()).await.unwrap();
+            }
+            requests
+        });
+        (address, task)
+    }
+
+    fn response(chat: bool) -> Value {
+        let choice = if chat {
+            json!({"index": 0, "message": {"role": "assistant", "content": " summary "}, "finish_reason": "stop"})
+        } else {
+            json!({"index": 0, "text": " summary ", "logprobs": null, "finish_reason": "stop"})
+        };
+        json!({"id": "test", "object": "completion", "created": 0, "model": "test", "choices": [choice]})
+    }
+
+    #[tokio::test]
+    async fn completion_routes_preserve_request_and_response() {
+        for (model, chat, path) in [
+            ("custom-chat-model", true, "/chat/completions"),
+            ("text-davinci-003", false, "/completions"),
+        ] {
+            let (api_base, server) = serve(vec![(200, response(chat))]).await;
+            let client = OpenAIClient::new(OpenAISettings {
+                api_base: Some(api_base),
+                model: Some(model.to_string()),
+                ..Default::default()
+            })
+            .unwrap();
+            let result =
+                tokio::time::timeout(Duration::from_secs(5), client.completions("test prompt"))
+                    .await
+                    .unwrap()
+                    .unwrap();
+            assert_eq!(result, "summary");
+            let requests = server.await.unwrap();
+            assert_eq!(requests[0].0, format!("POST {path} HTTP/1.1"));
+            assert_eq!(requests[0].1["model"], model);
+            if chat {
+                assert_eq!(
+                    requests[0].1["messages"],
+                    json!([{"role": "user", "content": "test prompt"}])
+                );
+            } else {
+                assert_eq!(requests[0].1["prompt"], "test prompt");
+                assert_eq!(requests[0].1["temperature"], 0.5);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn retries_respect_configured_count() {
+        for retries in [0, 1] {
+            let error = json!({"error": {"message": "slow down", "type": "rate_limit_error"}});
+            let mut responses = vec![(429, error)];
+            if retries > 0 {
+                responses.push((200, response(true)));
+            }
+            let (api_base, server) = serve(responses).await;
+            let client = OpenAIClient::new(OpenAISettings {
+                api_base: Some(api_base),
+                model: Some("custom-chat-model".to_string()),
+                retries: Some(retries),
+                ..Default::default()
+            })
+            .unwrap();
+            let result = tokio::time::timeout(Duration::from_secs(5), client.completions("test"))
+                .await
+                .unwrap();
+            assert_eq!(result.is_ok(), retries > 0);
+            assert_eq!(server.await.unwrap().len(), usize::from(retries) + 1);
+        }
     }
 }
