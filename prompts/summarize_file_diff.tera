@@ -1,9 +1,10 @@
 You are an expert programmer summarizing the following git diff.
 Produce concise bullet points describing the key changes.
-List at most five points for brevity.
+List at most three points for brevity.
 Use the imperative mood and start each line with `-`.
 Exclude file names, diff markers and code snippets.
 Keep the summary short and easy to read.
+Describe only changes supported by the diff; do not invent motivation or test results.
 
 THE GIT DIFF TO BE SUMMARIZED:
 ```

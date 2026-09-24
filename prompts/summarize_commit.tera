@@ -1,8 +1,10 @@
 You are an expert programmer writing a concise commit summary.
-Summarize the overall change in a handful of short bullet points.
+Summarize the overall change in one to three short bullet points.
 Use the imperative mood and begin each bullet with `-`.
 Focus on high level actions, avoiding repetition of file summaries.
-Return no more than five bullet points.
+Explain the outcome and include motivation only when supported by the changes.
+Do not claim tests passed or invent benefits that are not in the summaries.
+For a simple change, return a single bullet. Do not pad the message.
 
 THE FILE SUMMARIES:
 ```

@@ -22,10 +22,11 @@ use crate::{
     },
 };
 
-// Use the fastest and cheapest model available by default
-static DEFAULT_OPENAI_MODEL: &str = "gpt-4.1-nano";
+// Use an efficient model for short, focused commit summaries.
+pub(crate) const DEFAULT_OPENAI_MODEL: &str = "gpt-6-luna";
 
-static DEFAULT_FILES_TO_IGNORE: &[&str; 8] = &[
+static DEFAULT_FILES_TO_IGNORE: &[&str; 10] = &[
+    "bun.lock",
     "bun.lockb",
     "Cargo.lock",
     "composer.lock",
@@ -33,6 +34,7 @@ static DEFAULT_FILES_TO_IGNORE: &[&str; 8] = &[
     "package-lock.json",
     "pnpm-lock.yaml",
     "poetry.lock",
+    "uv.lock",
     "yarn.lock",
 ];
 

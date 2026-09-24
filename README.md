@@ -40,7 +40,18 @@ gptcommit install
 
 To use `gptcommit`, simply run `git commit` as you normally would. The hook will automatically generate a commit message for you using a large language model like GPT. If you're not satisfied with the generated message, you can always edit it before committing.
 
-Note: By default, `gptcommit` uses the fastest and most cost-effective OpenAI model available. Please ensure you have sufficient credits in your OpenAI account to use it.
+By default, `gptcommit` uses `gpt-6-luna` with reasoning disabled and a 512-token
+output limit per request. The default model is intended for focused commit
+summaries; you can override it with `openai.model`. Existing model overrides are
+preserved. Please ensure your OpenAI account has access and sufficient credits.
+
+Generation is quiet by default. Use `gptcommit --verbose` to inspect progress,
+skipped files, and matching ignore rules. Empty or fully ignored staged changes
+leave the commit message untouched and do not require an API key. File summaries
+run with at most four concurrent requests; a failed summary stops generation
+instead of silently omitting that file. The default prompts request a short
+imperative title and one to three factual bullets, with conventional prefixes
+enabled and per-file summaries hidden.
 
 ## Features
 
@@ -59,7 +70,7 @@ See all the config options available with `gptcommit config keys`.
 For example, `Cargo.lock` matches that filename at any depth, `/generated/`
 matches a root directory, and `**/*.min.js` matches minified JavaScript.
 Later matching patterns take precedence; `!` re-includes a matching file.
-Skipped files and the matching rule are reported when generating a message.
+Skipped files and the matching rule are reported with `--verbose`.
 
 Set the array in your user or repository config:
 
