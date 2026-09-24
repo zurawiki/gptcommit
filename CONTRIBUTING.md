@@ -138,6 +138,8 @@ This project is written as one or more Cargo crates. See the Rust website for se
 
 <https://www.rust-lang.org/learn/get-started>
 
+Building from source requires Rust 1.88 or newer.
+
 For running commands, we use the [`just`](https://just.systems/man/en/) runner.
 
 Some commands to know:

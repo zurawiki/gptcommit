@@ -2,7 +2,7 @@
 name = "gptcommit"
 version = "0.5.17"
 edition = "2021"
-rust-version = "1.74"
+rust-version = "1.88"
 authors = ["Roger Zurawicki <roger@zura.wiki>"]
 categories = ["development-tools"]
 keywords = ["openai", "githook", "git", "ai", "gpt"]
@@ -18,9 +18,8 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.90"
-async-openai = "0.14.2"
+async-openai = { version = "0.42.0", features = ["chat-completion", "completions", "middleware"] }
 async-trait = "0.1.73"
-backoff = "0.4.0"
 clap = { version = "4.4.4", features = ["derive"] }
 colored = "2.0.4"
 config = { version = "0.14.0", features = ["toml"] }
@@ -35,25 +34,27 @@ simple_logger = "5.0.0"
 strum = "0.26.0"
 strum_macros = "0.26.0"
 tera = { version = "1.19.1", default-features = false }
-tiktoken-rs = { version = "0.6.0", features = ["async-openai"] }
+tiktoken-rs = "0.6.0"
 tokio = { version = "1.32.0", features = ["full"] }
+tower = "0.5"
 toml = "0.8.0"
 toml_edit = "0.22.0"
 which = "6.0.0"
 
 
 [dependencies.reqwest]
-version = "0.11.20"
+version = "0.13.0"
 features = [
     "brotli",
     "gzip",
     "json",
     "multipart",
-    "rustls-tls",
+    "rustls",
+    "http2",
     "stream",
     "socks",
 ]
 default-features = false
 
 [dev-dependencies]
-async-std = "=1.12.0"
+async-std = "=1.13.2"
